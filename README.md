@@ -1,4 +1,4 @@
-# Aquabot_package
+# Aquabot_packages
 
 Ce repo github a pour but d'héberger les packages contenenant les noeuds ROS2.
 Dans l'idée il devrait être clonner à côté du dossier /vrx_ws
