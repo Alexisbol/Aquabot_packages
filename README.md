@@ -10,3 +10,25 @@ Chacun peut créer un package et travailler dessus.
 
 faire une nouvelle branche avec le nom du noeud 
 
+Ajouter ses fichiers sur la nouvelle branche(voir vision_node)
+
+Commit pour sauvegarder en local et push pour envoyer la sauvegarde sur le github
+
+Ensuite, envoyer une pull request de la branch avec le noeud sur la branche main
+
+# Pour installer l'environnement
+
+```
+git clone git@github.com:Alexisbol/Aquabot_packages.git
+cd ~/home/nom_utilisateur/nom_workspace
+colcon build
+source install/setup.bash
+```
+
+# Pour basculer entre les branches
+
+```
+git checkout nom_branche
+```
+
+
