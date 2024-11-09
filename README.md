@@ -31,4 +31,10 @@ source install/setup.bash
 git checkout nom_branche
 ```
 
+# Pour installer les dépendances de l'ekf
+
+```
+sudo apt install libgeographic-dev
+sudo apt install ros-humble-robot-localization
+```
 
