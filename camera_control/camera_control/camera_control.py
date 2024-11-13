@@ -35,7 +35,7 @@ class CameraControl(Node):
 
         self.camera_turn_pub = self.create_publisher(Float64, '/aquabot/thrusters/main_camera_sensor/pos', 5)
         
-        timer_period = 0.1  # seconds
+        timer_period = 1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         self.subscription = self.create_subscription(
@@ -63,11 +63,11 @@ class CameraControl(Node):
             odom_point = self.odom_pose.position
             odom_quaternion = self.odom_pose.orientation
             [roll, pitch, yaw] = euler_from_quaternion(odom_quaternion)
+            self.get_logger().info('-------------------------------------------------')
             self.get_logger().info('yaw: "%s"' % yaw)
             angle1 = math.atan((self.aim_point.x - odom_point.x)/(self.aim_point.y - odom_point.y))
             self.get_logger().info('angle1: "%s"' % angle1)
             camera_turn_msg.data = (angle1 - yaw)
-
             self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
             self.camera_turn_pub.publish(camera_turn_msg)
 
