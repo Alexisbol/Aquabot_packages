@@ -38,3 +38,36 @@ sudo apt install libgeographic-dev
 sudo apt install ros-humble-robot-localization
 ```
 
+# run the camera_control node :
+
+1) Start the simulation
+```
+ros2 launch aquabot_gz competition.launch.py world:=aquabot_regatta
+```
+
+2) Start rviz2
+```
+rviz2
+```
+add the image of the camera
+
+3) Start the keyboard teleoperation
+```
+ros2 run aquabot_python teleop_keyboard.py
+```
+4) Start EKF
+```
+cd ros2_ws
+source install/setup.bash
+ros2 launch aquabot_ekf ekf_launch.py
+```
+5) Start camera_control node
+```
+cd ros2_ws
+source install/setup.bash
+ros2 run camera_control camera_control
+```
+6) Send position to look at :
+```
+ros2 topic pub /aquabot/camera_look_at geometry_msgs/Point "{x: 1000.0, y: 1000.0, z: 0.0}"
+```
