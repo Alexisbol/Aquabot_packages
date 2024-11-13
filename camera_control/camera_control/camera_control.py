@@ -65,7 +65,7 @@ class CameraControl(Node):
             [roll, pitch, yaw] = euler_from_quaternion(odom_quaternion)
             self.get_logger().info('-------------------------------------------------')
             self.get_logger().info('yaw: "%s"' % yaw)
-            angle1 = math.atan((self.aim_point.x - odom_point.x)/(self.aim_point.y - odom_point.y))
+            angle1 = np.arctan((self.aim_point.x - odom_point.x)/(self.aim_point.y - odom_point.y))
             self.get_logger().info('angle1: "%s"' % angle1)
             camera_turn_msg.data = (angle1 - yaw)
             self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
