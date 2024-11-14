@@ -65,14 +65,14 @@ ros2 launch aquabot_gz competition.launch.py world:=aquabot_regatta
 
 2) Start rqt ou rviz2
 rqt est plus simple 
-`rviz2
-`rqt
+`rviz2`
+`rqt`
 
 add the image of the camera
 
 3) Start the keyboard teleoperation
 
-` ros2 run aquabot_python teleop_keyboard.py
+`ros2 run aquabot_python teleop_keyboard.py`
 
 4) Start EKF
 Il s'agit d'un noeud de Aquabot_packages donc il faut pas oublier d'executer le fichier de setup dans le terminal
@@ -81,7 +81,7 @@ cd ros2_ws
 source install/setup.bash
 ```
 Puis on peut lancer l'ekf :
-`ros2 launch aquabot_ekf ekf_launch.py
+`ros2 launch aquabot_ekf ekf_launch.py`
 
 5) Start camera_control node
 Il s'agit d'un noeud de Aquabot_packages donc il faut pas oublier d'executer le fichier de setup dans le terminal
@@ -90,7 +90,7 @@ Il s'agit d'un noeud de Aquabot_packages donc il faut pas oublier d'executer le 
 cd ros2_ws
 source install/setup.bash
 ```
-`ros2 run camera_control camera_control
+`ros2 run camera_control camera_control`
 
 6) Send position to look at :
 Le noeud de control de la camera à besoin d'un point de référence à regarder, on peut lui en envoyer un sur le topic /aquabot/camera_look_at avec la commende suivante :
