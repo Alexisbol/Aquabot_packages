@@ -37,9 +37,9 @@ Ajouter les lignes suivantes :
 alias ecn_build='cd ~/ros2_ws && colcon build --merge-install'
 alias ecn_source='source ~/ros2_ws/install/setup.bash'
 ```
-Il suffit de taper "ecn_build" quand il y a des changements dans le code pour le recompiler.
+Il suffit de taper `ecn_build` quand il y a des changements dans le code pour le recompiler.
 
-Si on veux utiliser un noeud de Aquabot_packages, il suffit de faire "ecn_source" pour que le terminal comprenne les commandes des noeuds du package.
+Si on veux utiliser un noeud de Aquabot_packages, il suffit de faire `ecn_source` pour que le terminal comprenne les commandes des noeuds du package.
 
 
 
@@ -65,14 +65,14 @@ ros2 launch aquabot_gz competition.launch.py world:=aquabot_regatta
 
 2) Start rqt ou rviz2
 rqt est plus simple 
-`rviz2`
-`rqt`
+```rviz2```
+```rqt```
 
 add the image of the camera
 
 3) Start the keyboard teleoperation
 
-`ros2 run aquabot_python teleop_keyboard.py`
+```ros2 run aquabot_python teleop_keyboard.py```
 
 4) Start EKF
 Il s'agit d'un noeud de Aquabot_packages donc il faut pas oublier d'executer le fichier de setup dans le terminal
@@ -81,7 +81,7 @@ cd ros2_ws
 source install/setup.bash
 ```
 Puis on peut lancer l'ekf :
-`ros2 launch aquabot_ekf ekf_launch.py`
+```ros2 launch aquabot_ekf ekf_launch.py```
 
 5) Start camera_control node
 Il s'agit d'un noeud de Aquabot_packages donc il faut pas oublier d'executer le fichier de setup dans le terminal
