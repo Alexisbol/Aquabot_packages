@@ -98,7 +98,9 @@ Il s'agit d'un noeud de Aquabot_packages donc il faut pas oublier d'executer le 
 cd ros2_ws
 source install/setup.bash
 ```
-`ros2 run camera_control camera_control`
+```
+ros2 run camera_control camera_control
+```
 
 6) Send position to look at :
 Le noeud de control de la camera à besoin d'un point de référence à regarder, on peut lui en envoyer un sur le topic /aquabot/camera_look_at avec la commende suivante :
