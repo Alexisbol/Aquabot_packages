@@ -28,7 +28,7 @@ source install/setup.bash
 Pour simplifier la compilation et l'execution du fichier de setup on peut ajouter les lignes suivante dans le bashrc.
 Pour ouvrir le fichier :
 ```
-getdit ~/.bashrc
+gedit ~/.bashrc
 ```
 
 Ajouter les lignes suivantes :
@@ -37,9 +37,9 @@ Ajouter les lignes suivantes :
 alias ecn_build='cd ~/ros2_ws && colcon build --merge-install'
 alias ecn_source='source ~/ros2_ws/install/setup.bash'
 ```
-Il suffit de taper ecn_build quand il y a des changements dans le code pour le recompiler.
+Il suffit de taper "ecn_build" quand il y a des changements dans le code pour le recompiler.
 
-Si on veux utiliser un noeud de Aquabot_packages il suffit de faire "ecn_source" pour que le terminal comprenne les commandes des noeuds du package.
+Si on veux utiliser un noeud de Aquabot_packages, il suffit de faire "ecn_source" pour que le terminal comprenne les commandes des noeuds du package.
 
 
 
