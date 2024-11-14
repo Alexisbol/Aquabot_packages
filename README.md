@@ -1,7 +1,7 @@
 # Aquabot_packages
 
 Ce repo github a pour but d'héberger les packages contenenant les noeuds ROS2.
-Dans l'idée il devrait être clonner à côté du dossier /vrx_ws
+Dans l'idée il devrait être clonné dans le dossier /ros2_ws. Et /ros2_ws est à côté du dossier /vrx_ws
 On aura le workspace sirhena et le notre séparer ce qui sera plus simple pour build le nôtre plus facilement.
 
 Chacun peut créer un package et travailler dessus. 
