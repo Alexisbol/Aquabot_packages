@@ -9,14 +9,14 @@ from geometry_msgs.msg import *
 import numpy as np
 
 def yaw_from_quaternion(quaternion):
-    x = quaternion.x
-    y = quaternion.y
+    #x = quaternion.x
+    #y = quaternion.y
     z = quaternion.z
     w = quaternion.w
-    siny_cosp = 2 * (w * z + x * y)
-    cosy_cosp = 1 - 2 * (y * y + z * z)
-    yaw = np.arctan2(siny_cosp, cosy_cosp)
-
+    #siny_cosp = 2 * (w * z + x * y)
+    #cosy_cosp = 1 - 2 * (y * y + z * z)
+    #yaw = np.arctan2(siny_cosp, cosy_cosp)
+    yaw = 2*np.arctan2(z,w)
     return yaw
 
 
