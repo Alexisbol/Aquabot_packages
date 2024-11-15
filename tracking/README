@@ -1,0 +1,7 @@
+service qui prend deux points et renvoie un path de custom interface
+
+ros2 run py_pathfinding pathfinding 
+
+pour tester le service il y a un client 
+
+ros2 run py_pathfinding client depart.x depart.y goal.x goal.y
