@@ -42,7 +42,7 @@ class OpenCvDecoder(Node):
         else:
             msg.data = 'null'
             self.publisher.publish(msg)
-            self.get_logger().info('No QR code detected')
+            #self.get_logger().info('No QR code detected')
 
 def main(args=None):
     rclpy.init(args=args)
