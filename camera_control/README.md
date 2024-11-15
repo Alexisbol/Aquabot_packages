@@ -2,6 +2,10 @@
 
 Node pour le controle de l'orientation de la caméra
 
+# utilisation
+
+ros2 run camera_control camera_control
+
 # node subscribed to
 
 '/aquabot/odom' Odometry Odometrie donnée par l'EKF
@@ -11,3 +15,4 @@ Node pour le controle de l'orientation de la caméra
 # node publishing to 
 
 '/aquabot/thrusters/main_camera_sensor/pos' Float64 angle absolue de la caméra
+

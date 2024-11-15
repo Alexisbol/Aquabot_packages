@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(opencv_example)
+project(camera_qrcode)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -31,8 +31,8 @@ install(PROGRAMS scripts/opencv_decoder.py
 DESTINATION lib/${PROJECT_NAME})
 
 ament_python_install_package(
-  opencv_example
-  PACKAGE_DIR src/opencv_example
+  camera_qrcode
+  PACKAGE_DIR src/camera_qrcode
 )
 
 ament_package()
