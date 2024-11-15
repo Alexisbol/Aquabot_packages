@@ -12,3 +12,4 @@ ros2 run camera_qrcode  opencv_decoder.py
 
 # node publishing to 
 
+'/aquabot/qrcode_data' String données du qrcode si scanné, sinon publie 'null'
