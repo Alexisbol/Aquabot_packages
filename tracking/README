@@ -1,0 +1,7 @@
+au moment du build crée un fichier dans install/tracking/bin et il faut le mettre dans install/tracking/lib/tracking 
+
+ros2 run tracking tracking depart.x depart.y goal.x goal.y 
+
+a besoin du path finding et du filtre ekf 
+
+publie directment sur les topics de commande des moteurs de aquabot 
