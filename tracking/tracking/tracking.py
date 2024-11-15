@@ -1,15 +1,35 @@
-from tutorial_interfaces.srv import Pathfind
-from tutorial_interfaces.msg import Point
-from tutorial_interfaces.msg import Path
+from custom_interface.srv import Pathfind
+from custom_interface.msg import Point
+from custom_interface.msg import Path
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from math import *
-from transformations import euler_from_quaternion, quaternion_from_euler
+#from transformations import euler_from_quaternion, quaternion_from_euler
 import sys
 from std_msgs.msg import Float64
+import numpy as np
+from sensor_msgs.msg import Imu
 
+def euler_from_quaternion(x,y,z,w):
+    """
+    x = quaternion.x
+    y = quaternion.y
+    z = quaternion.z
+    w = quaternion.w"""
 
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x * x + y * y)
+    roll = np.arctan2(sinr_cosp, cosr_cosp)
+
+    sinp = 2 * (w * y - z * x)
+    pitch = np.arcsin(sinp)
+
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y * y + z * z)
+    yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+    return roll, pitch, yaw
 
 def angle(p,c):
     return atan2(p[1]-c[1],p[0]-c[0])
@@ -27,18 +47,72 @@ def plusproche(pos,path):
             dm=d
             im=i+1
     
-    return path[max(len(path)-1,im+50)]
+    #return path[min(len(path)-1,im+20)]
+    return (200,200)
+
+def norme(v):
+    return dist(v,(0,0))
+
+tmax=10000
+
+def tracking3(pos,yaw,v,w,obj):
+    angle_error = angle(obj,pos)-angle(v,(0,0))
+    angle_error = atan2(sin(angle_error),cos(angle_error))
+
+
 
 def tracking(pos,yaw,v,w,obj):
-    tet=(angle(obj,pos)-yaw)%(2*pi)
+
+    
+    tet=(angle(obj,pos)-yaw+pi)%(2*pi)-pi
     somme=max(cos(tet),0)
     diff=sin(tet)
     if tet>pi/2:diff=1
     if tet<-pi/2:diff=-1
-    rt=(somme+diff)*50000
-    lt=(somme-diff)*50000
+    rt=(somme+diff)*10000
+    lt=(somme-diff)*10000
+
+    dx=obj[0]-pos[0]
+    dy=obj[1]-pos[1]
+    dis=dist(obj,pos)
+    v0=[2*dx/dis,2*dy/dis]
+
+
     return (rt,lt,tet,somme,diff,yaw)
 
+
+# Constantes de proportionnalité
+k_d = 1.0    # Constante pour la distance
+k_theta = 25  # Constante pour l'orientation
+k_v = 10   # Constante pour ajuster la puissance du moteur linéaire
+k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
+
+def tracking2(pos, theta, v_actual, omega_actual, obj):
+
+    x_target, y_target=obj
+    x,y=pos
+    # Calcul de la distance et de l'angle vers la cible
+    distance_target = sqrt((x_target - x)**2 + (y_target - y)**2)
+    theta_target = atan2(y_target - y, x_target - x)
+    
+    # Calcul de l'erreur d'angle
+    angle_error = theta_target - theta
+    # Normaliser l'angle dans l'intervalle [-pi, pi]
+    angle_error = atan2(sin(angle_error),cos(angle_error))
+    
+    # Définir la vitesse linéaire et angulaire désirée
+    v_desired = k_d * distance_target
+    omega_desired = k_theta * angle_error
+    
+    # Calcul des erreurs de vitesse linéaire et angulaire
+    delta_v = v_desired - norme(v_actual)
+    delta_omega = omega_desired - omega_actual
+    
+    # Calculer les commandes pour chaque moteur en compensant les erreurs
+    V_gauche = k_v * delta_v + k_omega * delta_omega
+    V_droite = k_v * delta_v - k_omega * delta_omega
+    
+    return V_gauche, V_droite,angle_error,delta_v,delta_omega,theta
 
 class Tracking(Node):
 
@@ -65,6 +139,12 @@ class Tracking(Node):
             10  # QoS profile (10 est une bonne valeur par défaut)
         )
 
+        self.subscription = self.create_subscription(
+            Imu,
+            'aquabot/imu',
+            self.imu_callback,
+            10  # QoS profile (10 est une bonne valeur par défaut)
+        )
         
         self.publisherl = self.create_publisher(Float64,'/aquabot/thrusters/left/thrust',10)
         self.timer=self.create_timer(0.5,self.commandel_callback)
@@ -72,7 +152,6 @@ class Tracking(Node):
         self.timer=self.create_timer(0.5,self.commander_callback)
         
         self.odom_received = False
-        self.path_received = False
 
     def send_request(self, start, goal):
         self.req.start.x = start[0]
@@ -94,25 +173,36 @@ class Tracking(Node):
         self.posbateau=(msg.pose.pose.position.x,msg.pose.pose.position.y)
         self.vbateau=(msg.twist.twist.linear.x,msg.twist.twist.linear.y)
         
-        #self.yaw, self.pitch, self.roll = euler_from_quaternion((msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z, msg.pose.pose.orientation.w))
-        self.yaw=2*atan2(msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
+        self.roll, self.pitch, self.yaw = euler_from_quaternion(msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
+        #self.yaw=2*atan2(msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
         self.wbateau=(msg.twist.twist.angular.z)
         self.odom_received = True
         # Afficher les informations de position et de vitesse reçues
         self.get_logger().info(f"Position -> x: {msg.pose.pose.position.x}, y: {msg.pose.pose.position.y}, z: {msg.pose.pose.position.z}")
         self.get_logger().info(f"Orientation -> x: {msg.pose.pose.orientation.x}, y: {msg.pose.pose.orientation.y}, z: {msg.pose.pose.orientation.z}, w: {msg.pose.pose.orientation.w}")
-        self.get_logger().info(f"Orientation -> yaw: {self.yaw}")#, roll: {self.roll}, pitch: {self.pitch}")
+        self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
 
         self.get_logger().info(f"Vitesse linéaire -> x: {msg.twist.twist.linear.x}, y: {msg.twist.twist.linear.y}, z: {msg.twist.twist.linear.z}")
         self.get_logger().info(f"Vitesse angulaire -> x: {msg.twist.twist.angular.x}, y: {msg.twist.twist.angular.y}, z: {msg.twist.twist.angular.z}")
 
+    def imu_callback(self, msg: Imu):
+        # Extraire les quaternions
+        orientation_x = msg.orientation.x
+        orientation_y = msg.orientation.y
+        orientation_z = msg.orientation.z
+        orientation_w = msg.orientation.w
+        
+        # Afficher les quaternions dans le log
+        self.get_logger().info(f"Orientation Quaternion -> x: {orientation_x}, y: {orientation_y}, z: {orientation_z}, w: {orientation_w}")
+        #self.roll, self.pitch, self.yaw = euler_from_quaternion(msg.orientation.x,msg.orientation.y,msg.orientation.z, msg.orientation.w)
+        self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
 
     
     def commandel_callback(self):
         if self.odom_received and self.path:
             msg=Float64()
             #self.get_logger().info('Path: "%s"' % self.path)
-            (rt,lt,tet,somme,diff,yaw)= tracking(self.posbateau,self.yaw,self.vbateau,self.wbateau,plusproche(self.posbateau,self.path))
+            (rt,lt,tet,somme,diff,yaw)= tracking2(self.posbateau,self.yaw,self.vbateau,self.wbateau,plusproche(self.posbateau,self.path))
             self.get_logger().info('accel gauche: "%s"' % lt)
 
             msg.data=float(lt)
@@ -121,17 +211,25 @@ class Tracking(Node):
     def commander_callback(self):
         if self.odom_received and self.path:
             msg=Float64()
-            self.get_logger().info('self.yaw: "%s"' % self.yaw)
-
-            (rt,lt,tet,somme,diff,yaw)= tracking(self.posbateau,self.yaw,self.vbateau,self.wbateau,plusproche(self.posbateau,self.path))
+            #self.get_logger().info('self.yaw: "%s"' % self.yaw)
+            self.obj=plusproche(self.posbateau,self.path)
+            (rt,lt,angle_error,somme,diff,yaw)= tracking2(self.posbateau,self.yaw,self.vbateau,self.wbateau,self.obj)                        
+            
             msg.data=float(rt)
             self.publisherr.publish(msg)
+
             self.get_logger().info('accel droit: "%s"' % msg.data)
-            self.get_logger().info('tet: "%s"' % tet)
+
+            self.get_logger().info(f"obj :{self.obj}" ) 
+            self.get_logger().info(f"pos:{self.posbateau}")
+            self.obj=plusproche(self.posbateau,self.path)
+
+            self.get_logger().info(f"angle:{angle(self.obj,self.posbateau)}")
+            self.get_logger().info('angle_error: "%s"' % angle_error)
             self.get_logger().info('yaw: "%s"' % yaw)
 
-            self.get_logger().info('diff: "%s"' % diff)
-            self.get_logger().info('somme: "%s"' % somme)
+            self.get_logger().info('deltav: "%s"' % diff)
+            self.get_logger().info('deltaomega: "%s"' % somme)
 
 
 
