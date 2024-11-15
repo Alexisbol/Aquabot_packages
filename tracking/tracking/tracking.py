@@ -249,7 +249,7 @@ def main():
     if tracking.path:
         print(f"Path received: {tracking.path}")
     else:
-        tracking.get_logger().error("No path received")
+        tracking.get_logger().info("No path received")
 
     rclpy.spin(tracking)
 
