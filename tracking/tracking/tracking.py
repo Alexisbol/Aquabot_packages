@@ -4,6 +4,8 @@ from custom_interface.msg import Path
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from nav_msgs.msg import Path as Pathfixed
+from geometry_msgs.msg import Pose
 from math import *
 #from transformations import euler_from_quaternion, quaternion_from_euler
 import sys
@@ -84,7 +86,6 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     return V_gauche, V_droite,angle_error,delta_v,delta_omega,theta
 
 class Tracking(Node):
-
     def __init__(self):
         super().__init__('tracking')
         self.path=[]
@@ -127,6 +128,7 @@ class Tracking(Node):
         self.publisherr = self.create_publisher(Float64,'/aquabot/thrusters/right/thrust',10)
         self.timer=self.create_timer(0.5,self.commander_callback)
         self.timer=self.create_timer(1,self.updatepath_callback)
+        self.publisherpath = self.create_publisher(Pathfixed,'/aquabot/currentpath',10)
 
         self.odom_received = False
         self.goal_received = False
@@ -143,7 +145,6 @@ class Tracking(Node):
             self.path_received=True
             self.get_logger().info(f"Received path")
             self.path = path  # Enregistrer le chemin dans l'attribut
-
         future.add_done_callback(handle_response)
         return future
     
@@ -154,6 +155,13 @@ class Tracking(Node):
     def updatepath_callback(self):
         if(self.odom_received and self.goal_received):
             self.send_request(self.posbateau,self.goal)
+        pathfixed = Pathfixed()
+        for i in self.path:
+            posefixed = Pose()
+            posefixed.position.x = i.x
+            posefixed.position.y = i.y
+            pathfixed.poses.append(posefixed)
+        self.publisherpath.publish()
     
     def odom_callback(self, msg):
         self.posbateau=(msg.pose.pose.position.x,msg.pose.pose.position.y)
@@ -164,12 +172,12 @@ class Tracking(Node):
         self.wbateau=(msg.twist.twist.angular.z)
         self.odom_received = True
         # Afficher les informations de position et de vitesse reçues
-        self.get_logger().info(f"Position -> x: {msg.pose.pose.position.x}, y: {msg.pose.pose.position.y}, z: {msg.pose.pose.position.z}")
-        self.get_logger().info(f"Orientation -> x: {msg.pose.pose.orientation.x}, y: {msg.pose.pose.orientation.y}, z: {msg.pose.pose.orientation.z}, w: {msg.pose.pose.orientation.w}")
-        self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
+        #self.get_logger().info(f"Position -> x: {msg.pose.pose.position.x}, y: {msg.pose.pose.position.y}, z: {msg.pose.pose.position.z}")
+        #self.get_logger().info(f"Orientation -> x: {msg.pose.pose.orientation.x}, y: {msg.pose.pose.orientation.y}, z: {msg.pose.pose.orientation.z}, w: {msg.pose.pose.orientation.w}")
+        #self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
 
-        self.get_logger().info(f"Vitesse linéaire -> x: {msg.twist.twist.linear.x}, y: {msg.twist.twist.linear.y}, z: {msg.twist.twist.linear.z}")
-        self.get_logger().info(f"Vitesse angulaire -> x: {msg.twist.twist.angular.x}, y: {msg.twist.twist.angular.y}, z: {msg.twist.twist.angular.z}")
+        #self.get_logger().info(f"Vitesse linéaire -> x: {msg.twist.twist.linear.x}, y: {msg.twist.twist.linear.y}, z: {msg.twist.twist.linear.z}")
+        #self.get_logger().info(f"Vitesse angulaire -> x: {msg.twist.twist.angular.x}, y: {msg.twist.twist.angular.y}, z: {msg.twist.twist.angular.z}")
 
     def imu_callback(self, msg: Imu):
         # Extraire les quaternions
@@ -179,9 +187,9 @@ class Tracking(Node):
         orientation_w = msg.orientation.w
         
         # Afficher les quaternions dans le log
-        self.get_logger().info(f"Orientation Quaternion -> x: {orientation_x}, y: {orientation_y}, z: {orientation_z}, w: {orientation_w}")
+        #self.get_logger().info(f"Orientation Quaternion -> x: {orientation_x}, y: {orientation_y}, z: {orientation_z}, w: {orientation_w}")
         #self.roll, self.pitch, self.yaw = euler_from_quaternion(msg.orientation.x,msg.orientation.y,msg.orientation.z, msg.orientation.w)
-        self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
+        #self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
 
     
     def commandel_callback(self):
@@ -189,7 +197,7 @@ class Tracking(Node):
             msg=Float64()
             #self.get_logger().info('Path: "%s"' % self.path)
             (right_Thrust,lt,theta,somme,diff,yaw)= commande(self.posbateau,self.yaw,self.vbateau,self.wbateau,plusproche(self.posbateau,self.path))
-            self.get_logger().info('accel gauche: "%s"' % lt)
+            #self.get_logger().info('accel gauche: "%s"' % lt)
 
             msg.data=float(lt)
             self.publisherl.publish(msg)
@@ -204,18 +212,18 @@ class Tracking(Node):
             msg.data=float(right_Thrust)
             self.publisherr.publish(msg)
 
-            self.get_logger().info('accel droit: "%s"' % msg.data)
+            #self.get_logger().info('accel droit: "%s"' % msg.data)
 
-            self.get_logger().info(f"objectif :{self.objectif}" ) 
-            self.get_logger().info(f"pos:{self.posbateau}")
+            #self.get_logger().info(f"objectif :{self.objectif}" ) 
+            #self.get_logger().info(f"pos:{self.posbateau}")
             self.objectif=plusproche(self.posbateau,self.path)
 
-            self.get_logger().info(f"angle:{angle(self.objectif,self.posbateau)}")
-            self.get_logger().info('angle_error: "%s"' % angle_error)
-            self.get_logger().info('yaw: "%s"' % yaw)
+            #self.get_logger().info(f"angle:{angle(self.objectif,self.posbateau)}")
+            #self.get_logger().info('angle_error: "%s"' % angle_error)
+            #self.get_logger().info('yaw: "%s"' % yaw)
 
-            self.get_logger().info('deltav: "%s"' % diff)
-            self.get_logger().info('deltaomega: "%s"' % somme)
+            #self.get_logger().info('deltav: "%s"' % diff)
+            #self.get_logger().info('deltaomega: "%s"' % somme)
 
 
 def main():

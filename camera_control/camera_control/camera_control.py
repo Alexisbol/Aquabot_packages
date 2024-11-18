@@ -69,7 +69,7 @@ class CameraControl(Node):
         
     def aim_callback(self, msg):
         self.aim_point = msg
-        self.get_logger().info('Received point to look at')
+        #self.get_logger().info('Received point to look at')
 	
 
 def main(args=None):
