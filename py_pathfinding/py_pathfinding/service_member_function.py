@@ -56,7 +56,7 @@ class MinimalService(Node):
         # Créer la souscription aux positions des éoliennes
         self.subscription = self.create_subscription(
             PoseArray,
-            '/aquabot/ais_sensor/windturbines_positions',
+            '/aquabot/turbines',
             self.windturbines_callback,
             10
         )
@@ -72,7 +72,7 @@ class MinimalService(Node):
             x, y = pose.position.x, pose.position.y
             # Ajouter chaque éolienne comme obstacle avec un rayon de 10
             if (gps_to_plan(x, y), 8) not in self.liobs :
-                self.liobs.append((gps_to_plan(x, y), 8))
+                self.liobs.append((x, y), 8)
                 self.get_logger().info(f'Positions des éoliennes mises à jour :{self.liobs}')
 
     def path_callback(self, request, response):
