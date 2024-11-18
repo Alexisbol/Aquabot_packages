@@ -1,0 +1,7 @@
+noeud chemin service
+
+ros2 run py_pathfinding pathfinding
+
+requete : deux points de custom interface 
+
+reponse : path de custom interface 
