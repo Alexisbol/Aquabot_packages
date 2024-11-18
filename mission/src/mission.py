@@ -112,7 +112,8 @@ class Mission(Node):
 
             if(self.proche_goal(15)):
                 #utiliser la commande de stabilisation
-                
+                self.status = 'STAY'
+
             
 
 
