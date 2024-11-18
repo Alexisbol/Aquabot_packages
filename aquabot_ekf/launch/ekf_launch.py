@@ -5,7 +5,7 @@ def generate_launch_description():
 
     sl = SimpleLauncher(use_sim_time=True)
     sl.declare_arg('rviz', True)
-    sl.declare_arg('unify',False)
+    sl.declare_arg('unify',True)
 
     with sl.group(if_arg = 'rviz'):
         sl.rviz(sl.find('aquabot_ekf', 'ekf.rviz'))

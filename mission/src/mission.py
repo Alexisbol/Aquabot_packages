@@ -108,7 +108,7 @@ class Mission(Node):
 
         if(self.status == 'RALLY'):
             self.turbinesI = 0
-            self.currentgoal = self.liste_turbines[self.turbinesI]
+            self.currentgoal = self.liste_turbines[self.turbinesI] #ca faut voir avec sirena pour l'id defectueuse
 
             #if(self.proche_goal(15)):
                 #utiliser la commande de stabilisation
