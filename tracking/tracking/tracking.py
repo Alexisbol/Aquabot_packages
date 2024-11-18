@@ -5,7 +5,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path as Pathfixed
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
 from math import *
 #from transformations import euler_from_quaternion, quaternion_from_euler
 import sys
@@ -89,6 +89,7 @@ class Tracking(Node):
     def __init__(self):
         super().__init__('tracking')
         self.path=[]
+        self.pathfixed = Pathfixed()
         self.posbateau=(0,0)
         self.vbateau=(0,0)
         self.goal = Point()
@@ -142,26 +143,28 @@ class Tracking(Node):
         def handle_response(future):
             response = future.result()
             path = [(point.x, point.y) for point in response.path.points]
+            pathfixed = Pathfixed()
+            for point in response.path.points:
+                posefixed = PoseStamped()
+                posefixed.pose.position.x = point.x
+                posefixed.pose.position.y = point.y
+                posefixed.pose.position.z = 0.0
+                pathfixed.poses.append(posefixed)
             self.path_received=True
-            self.get_logger().info(f"Received path")
+            #self.get_logger().info(f"Received path")
             self.path = path  # Enregistrer le chemin dans l'attribut
+            self.pathfixed = pathfixed
         future.add_done_callback(handle_response)
         return future
     
     def goal_callback(self,msg):
-        self.goal = msg.data
+        self.goal = (msg.x,msg.y)
         self.goal_received = True
 
     def updatepath_callback(self):
         if(self.odom_received and self.goal_received):
             self.send_request(self.posbateau,self.goal)
-        pathfixed = Pathfixed()
-        for i in self.path:
-            posefixed = Pose()
-            posefixed.position.x = i.x
-            posefixed.position.y = i.y
-            pathfixed.poses.append(posefixed)
-        self.publisherpath.publish()
+            self.publisherpath.publish(self.pathfixed)
     
     def odom_callback(self, msg):
         self.posbateau=(msg.pose.pose.position.x,msg.pose.pose.position.y)

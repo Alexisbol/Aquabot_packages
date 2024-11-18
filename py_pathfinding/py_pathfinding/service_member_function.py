@@ -50,8 +50,8 @@ class MinimalService(Node):
 
         # Calculer le chemin en utilisant la fonction de pathfinding avec la liste d'obstacles mise à jour
         chemin = pathfinding((request.start.x,request.start.y), (request.goal.x,request.goal.y), self.liobs)
-        self.get_logger().info('Requête reçue\nDépart: (%d, %d) Arrivée: (%d, %d)' % (request.start.x, request.start.y, request.goal.x, request.goal.y))
-        self.get_logger().info(f'chemin : {chemin}')
+        #self.get_logger().info('Requête reçue\nDépart: (%d, %d) Arrivée: (%d, %d)' % (request.start.x, request.start.y, request.goal.x, request.goal.y))
+        #self.get_logger().info(f'chemin : {chemin}')
 
         # Ajouter chaque point du chemin calculé à la réponse
         for point in chemin:
