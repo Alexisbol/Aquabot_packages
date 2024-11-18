@@ -106,6 +106,17 @@ class Mission(Node):
             if(self.phase == 2):
                 self.status = 'RALLY'
 
+        if(self.status == 'RALLY'):
+            self.turbinesI = 0
+            self.currentgoal = self.liste_turbines[self.turbinesI]
+
+            if(self.proche_goal(15)):
+                #utiliser la commande de stabilisation
+                
+            
+
+
+
 
             
 
