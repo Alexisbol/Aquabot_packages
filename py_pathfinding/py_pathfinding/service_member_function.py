@@ -8,37 +8,6 @@ from geometry_msgs.msg import PoseArray  # Pour recevoir les positions des éoli
 import numpy as np
 from scipy.optimize import least_squares
 
-gps_coords = np.array([
-    [48.046548317342065, -4.9794483237441804],
-    [48.048915152021024, -4.9733800265744375],
-    [48.044613214367736, -4.979946020083705]
-])
-
-plan_coords = np.array([
-    [219.5182, 290.7860],
-    [-233.2420, 27.6154],
-    [-270.3600, -187.5490]
-])
-
-# Fonction pour calculer les erreurs de transformation affine
-def affine_transformation(params, gps_coords, plan_coords):
-    a, b, c, d, e, f = params
-    transformed_points = np.array([
-        [a * lat + b * lon + c, d * lat + e * lon + f]
-        for lat, lon in gps_coords
-    ])
-    return (transformed_points - plan_coords).ravel()
-
-# Résoudre pour trouver les paramètres optimaux
-initial_guess = [1, 1, 1, 1, 1, 1]
-result = least_squares(affine_transformation, initial_guess, args=(gps_coords, plan_coords))
-a, b, c, d, e, f = result.x
-
-# Fonction finale pour transformer les coordonnées GPS en coordonnées du repère plan
-def gps_to_plan(lat, lon):
-    x = a * lat + b * lon + c
-    y = d * lat + e * lon + f
-    return x, y
 
 # Liste des obstacles existants
 liobs = [((120, -50), 35), ((-152, -6), 55), ((110, 135), 50), ((12, -102), 30),
@@ -71,8 +40,8 @@ class MinimalService(Node):
             # Extraire les coordonnées x et y
             x, y = pose.position.x, pose.position.y
             # Ajouter chaque éolienne comme obstacle avec un rayon de 10
-            if (gps_to_plan(x, y), 8) not in self.liobs :
-                self.liobs.append((x, y), 8)
+            if ((x, y), 8) not in self.liobs :
+                self.liobs.append(((x, y), 8))
                 self.get_logger().info(f'Positions des éoliennes mises à jour :{self.liobs}')
 
     def path_callback(self, request, response):
