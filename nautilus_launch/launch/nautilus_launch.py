@@ -11,6 +11,8 @@ def generate_launch_description():
 
     sl.include('aquabot_ekf', 'ekf_launch.py')
 
-    sl.node('py_pathfinding')
+    sl.node('py_pathfinding', 'pathfinding')
+
+    sl.node('tracking')
     
     return sl.launch_description()

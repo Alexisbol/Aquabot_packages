@@ -121,6 +121,7 @@ class Tracking(Node):
         self.path=[]
         self.posbateau=(0,0)
         self.vbateau=(0,0)
+        self.goal = Point()
         
         self.roll, self.pitch, self.yaw = 0,0,0
         self.wbateau=(0,0)
@@ -129,9 +130,15 @@ class Tracking(Node):
             self.get_logger().info('service not available, waiting again...')
         self.req = Pathfind.Request()
         
+        self.subscription = self.create_subscription(
+            Point,
+            'aquabot/goal',
+            self.goal_callback,
+            10
+        )
+
         # Créer un abonnement au topic "aquabot/odom"
         # Le type de message est nav_msgs/msg/Odometry
-
         self.subscription = self.create_subscription(
             Odometry,
             'aquabot/odom',
@@ -150,8 +157,10 @@ class Tracking(Node):
         self.timer=self.create_timer(0.5,self.commandel_callback)
         self.publisherr = self.create_publisher(Float64,'/aquabot/thrusters/right/thrust',10)
         self.timer=self.create_timer(0.5,self.commander_callback)
-        
+        self.timer=self.create_timer(1,self.updatepath_callback)
+
         self.odom_received = False
+        self.goal_received = False
 
     def send_request(self, start, goal):
         self.req.start.x = start[0]
@@ -168,6 +177,14 @@ class Tracking(Node):
 
         future.add_done_callback(handle_response)
         return future
+    
+    def goal_callback(self,msg):
+        self.goal = msg.data
+        self.goal_received = True
+
+    def updatepath_callback(self):
+        if(self.odom_received and self.goal_received):
+            self.send_request(self.posbateau,self.goal)
     
     def odom_callback(self, msg):
         self.posbateau=(msg.pose.pose.position.x,msg.pose.pose.position.y)
@@ -243,13 +260,13 @@ def main():
     
     
             
-    future = tracking.send_request((float(sys.argv[1]), float(sys.argv[2])),(float(sys.argv[3]),float(sys.argv[4])))
-    rclpy.spin_until_future_complete(tracking, future)
-    
-    if tracking.path:
-        print(f"Path received: {tracking.path}")
-    else:
-        tracking.get_logger().info("No path received")
+    #future = tracking.send_request((float(sys.argv[1]), float(sys.argv[2])),(float(sys.argv[3]),float(sys.argv[4])))
+    #rclpy.spin_until_future_complete(tracking, future)
+    #
+    #if tracking.path:
+    #    print(f"Path received: {tracking.path}")
+    #else:
+    #    tracking.get_logger().info("No path received")
 
     rclpy.spin(tracking)
 
