@@ -110,9 +110,9 @@ class Mission(Node):
             self.turbinesI = 0
             self.currentgoal = self.liste_turbines[self.turbinesI]
 
-            if(self.proche_goal(15)):
+            #if(self.proche_goal(15)):
                 #utiliser la commande de stabilisation
-                self.status = 'STAY'
+                
 
             
 

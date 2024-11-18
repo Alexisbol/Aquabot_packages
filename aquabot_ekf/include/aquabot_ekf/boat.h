@@ -9,6 +9,7 @@
 #include <ros_gz_interfaces/msg/param_vec.hpp>
 
 using ros_gz_interfaces::msg::ParamVec;
+using namespace std::chrono_literals;
 
 namespace aquabot_ekf
 {
@@ -24,7 +25,11 @@ struct Boat
   rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr pose_pub;
   rclcpp::Publisher<Imu>::SharedPtr imu_pub;
 
-  Boat(rclcpp::Node* node, toENU* enu) : node{node}, enu{enu}
+  rclcpp::TimerBase::SharedPtr pose_timer;
+
+  bool unify;
+
+  Boat(rclcpp::Node* node, toENU* enu, bool unify_output = false) : node{node}, enu{enu}
   {
     // init pose and imu messages
     pose.header.frame_id = "world";
@@ -43,8 +48,21 @@ struct Boat
       imu.orientation_covariance[i] = Covariances::rpy;
     }
 
-    pose_pub = node->create_publisher<PoseWithCovarianceStamped>("/aquabot/gps_pose", rclcpp::SensorDataQoS());
-    imu_pub = node->create_publisher<Imu>("/aquabot/imu", rclcpp::SensorDataQoS());
+    if(unify_output)
+    {
+      pose_timer = node->create_wall_timer(30ms, [this, node]()
+                                           {
+                                             pose.header.stamp = node->get_clock()->now();
+                                             pose_pub->publish(pose);
+                                           });
+      pose_pub = node->create_publisher<PoseWithCovarianceStamped>("/aquabot/fused_pose", rclcpp::SensorDataQoS());
+    }
+    else
+    {
+      pose_pub = node->create_publisher<PoseWithCovarianceStamped>("/aquabot/gps_pose", rclcpp::SensorDataQoS());
+      imu_pub = node->create_publisher<Imu>("/aquabot/imu", rclcpp::SensorDataQoS());
+    }
+
   }
 
   inline void updatePose(const NavSatFix &gps)
@@ -57,17 +75,29 @@ struct Boat
 
     pose.pose.pose.position.z -= 1.62;  // not quite
 
-    pose.header.stamp = node->get_clock()->now();
-    pose_pub->publish(pose);
+    if(!pose_timer)
+    {
+      pose.header.stamp = node->get_clock()->now();
+      pose_pub->publish(pose);
+    }
   }
 
   inline void updateImu(const Imu &imu)
   {
-    this->imu.orientation = imu.orientation;
-    this->imu.angular_velocity = imu.angular_velocity;
-    //this->imu.linear_acceleration = imu.linear_acceleration;
-    this->imu.header.stamp = node->get_clock()->now();
-    imu_pub->publish(this->imu);
+
+    if(!pose_timer)
+    {
+      this->imu.orientation = imu.orientation;
+      this->imu.angular_velocity = imu.angular_velocity;
+      //this->imu.linear_acceleration = imu.linear_acceleration;
+
+      this->imu.header.stamp = node->get_clock()->now();
+      imu_pub->publish(this->imu);
+    }
+    else
+    {
+      this->pose.pose.pose.orientation = imu.orientation;
+    }
   }
 };
 }

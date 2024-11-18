@@ -12,7 +12,7 @@ namespace aquabot_ekf
 class GPS2Pose : public rclcpp::Node
 {
 public:
-  GPS2Pose() : Node("gps2pose"), boat{this, &enu}
+  GPS2Pose() : Node("gps2pose"), boat{this, &enu, declare_parameter("unify", false)}
   {
     set_parameter(rclcpp::Parameter("use_sim_time", true));
 
@@ -28,7 +28,8 @@ public:
   }
 
 
-private:
+private:    
+
   toENU enu;
   Boat boat;
 
