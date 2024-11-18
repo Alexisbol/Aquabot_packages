@@ -17,7 +17,7 @@ setup(
     maintainer_email='leon@todo.todo',
     description='TODO: Package description',
     license='TODO: License declaration',
-    tests_require=['pytest'],
+    #tests_require=['pytest'],
     entry_points={
         'console_scripts': [
         	'camera_control = camera_control.camera_control:main',
