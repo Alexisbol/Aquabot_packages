@@ -17,7 +17,7 @@ class Mission(Node):
         
         self.turbines_subscription = self.create_subscription(
             PoseArray,
-            '/aquabot/ais_sensor/windturbines_positions',
+            '/aquabot/turbines',
             self.turbinespose_callback,
             10
         )
@@ -55,6 +55,15 @@ class Mission(Node):
 
         self.status = 'INITIALIZED'
 
+    def proche_goal(self,dist):
+        x = self.odom.pose.pose.position.x
+        y = self.odom.pose.pose.position.y
+        gx = self.currentgoal.x
+        gy = self.currentgoal.y
+        if(abs(x-gx)<dist and abs(y-gy)<dist):
+            return True
+        else:
+            return False
 
     def odom_callback(self,msg):
         self.odom = msg.data
@@ -75,14 +84,28 @@ class Mission(Node):
     def timer_callback(self):
         if(self.status == 'INITIALIZED'):
             if(self.turbines_received and self.phase == 1):
-                self.status = 'SEARCHING'
+                self.status = 'SEARCH'
 
-        if(self.status == 'SEARCHING'):
+        if(self.status == 'SEARCH'):
+            #a modif mettre un point proche mais pas exacte
             self.currentgoal = self.liste_turbines[self.turbinesI]
-            if(self.qrcode_received):
+
+            self.goal_publishers.publish(self.currentgoal)
+            self.camera_publishers.publish(self.liste_turbines[self.turbinesI])
+            
+            if(not self.proche_goal(20)): #pas assez proche pour etre sur que ce soit le bon qrcode
+                self.qrcode_received = False
+
+            if(self.qrcode_received): #QR code scanné
                 self.turbinesI+=1
                 self.qr_publishers.publish(self.qrcode)
-            elif():
+            elif(self.proche_goal(1)): #Arrivé mais pas QR code scanné
+                #mettre le point en face du point actuel pour forcer à faire le tour
+                self.currentgoal = self.liste_turbines[self.turbinesI]
+
+            if(self.phase == 2):
+                self.status = 'RALLY'
+
 
             
 
