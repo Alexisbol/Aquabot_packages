@@ -1,6 +1,6 @@
 noeud chemin service
 
-ros2 run ros2 run py_pathfinding pathfinding
+ros2 run py_pathfinding pathfinding
 
 requete : deux points de custom interface 
 
