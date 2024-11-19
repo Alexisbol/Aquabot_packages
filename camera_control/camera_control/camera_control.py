@@ -54,12 +54,27 @@ class CameraControl(Node):
         
             odom_point = self.odom_pose.position
             odom_quaternion = self.odom_pose.orientation
-            yaw = yaw_from_quaternion(odom_quaternion)
-            #self.get_logger().info('-------------------------')
+            current_yaw = yaw_from_quaternion(odom_quaternion)
+            self.get_logger().info('-----branch optimise camera angle----------')
             #self.get_logger().info('yaw: "%s"' % yaw)
-            angle1 = np.arctan((self.aim_point.x - odom_point.x)/(self.aim_point.y - odom_point.y))
+            target_yaw = np.arctan((self.aim_point.x - odom_point.x)/(self.aim_point.y - odom_point.y))
             #self.get_logger().info('angle1: "%s"' % angle1)
-            camera_turn_msg.data = (angle1 - yaw)
+
+            # Convertir les angles dans la plage -π à π
+            current_yaw = math.fmod(current_yaw + math.pi, 2 * math.pi) - math.pi
+            target_yaw = math.fmod(target_yaw + math.pi, 2 * math.pi) - math.pi
+
+            # Calcul des deux chemins
+            direct = (target_yaw - current_yaw) % (2 * math.pi)
+            inverse = (current_yaw - target_yaw) % (2 * math.pi)
+
+            # Choisir le plus court
+            if direct <= inverse:
+                optimal_angle = current_yaw + direct
+            else:
+                optimal_angle = current_yaw - inverse
+
+            camera_turn_msg.data = math.fmod(optimal_angle + math.pi, 2 * math.pi) - math.pi # Normaliser entre -pi; pi
             #self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
             self.camera_turn_pub.publish(camera_turn_msg)
 
