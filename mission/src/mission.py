@@ -4,6 +4,7 @@ from sensor_msgs import *
 from std_msgs.msg import *
 from nav_msgs.msg import *
 from geometry_msgs.msg import *
+from math import *
 
 class Mission(Node):
     def __init__(self):
@@ -64,6 +65,18 @@ class Mission(Node):
             return True
         else:
             return False
+        
+    
+
+    def point_tangeant(position,objectif):
+        disteol=10
+
+        xo,yo=objectif
+        x,y=position
+        gamma=atan2(yo-y,xo-x)
+        tetha=acos(disteol/dist(position,objectif))
+        point=(xo+disteol*cos(gamma+tetha-pi),yo+disteol*sin(gamma+tetha-pi))
+        return point
 
     def odom_callback(self,msg):
         self.odom = msg.data
@@ -88,7 +101,9 @@ class Mission(Node):
 
         if(self.status == 'SEARCH'):
             #a modif mettre un point proche mais pas exacte
-            self.currentgoal = self.liste_turbines[self.turbinesI]
+            x = self.odom.pose.pose.position.x
+            y = self.odom.pose.pose.position.y
+            self.currentgoal = self.point_tangeant((x,y),self.liste_turbines[self.turbinesI])
 
             self.goal_publishers.publish(self.currentgoal)
             self.camera_publishers.publish(self.liste_turbines[self.turbinesI])
@@ -105,18 +120,6 @@ class Mission(Node):
 
             if(self.phase == 2):
                 self.status = 'RALLY'
-
-        if(self.status == 'RALLY'):
-            self.turbinesI = 0
-            self.currentgoal = self.liste_turbines[self.turbinesI] #ca faut voir avec sirena pour l'id defectueuse
-
-            #if(self.proche_goal(15)):
-                #utiliser la commande de stabilisation
-                
-
-            
-
-
 
 
             
