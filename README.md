@@ -78,6 +78,9 @@ add the image of the camera
 ```
 ros2 run aquabot_python teleop_keyboard.py
 ```
+```
+ros2 run aquabot_python teleop_keyboard.py --ros-args -p advanced:=True
+```
 
 4) Start EKF
 Il s'agit d'un noeud de Aquabot_packages donc il faut pas oublier d'executer le fichier de setup dans le terminal
