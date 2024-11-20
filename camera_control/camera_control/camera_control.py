@@ -59,7 +59,7 @@ class CameraControl(Node):
             #self.get_logger().info('yaw: "%s"' % yaw)
             angle1 = np.arctan((self.aim_point.x - odom_point.x)/(self.aim_point.y - odom_point.y))
             #self.get_logger().info('angle1: "%s"' % angle1)
-            camera_turn_msg.data = (angle1 - yaw)
+            camera_turn_msg.data = (-angle1 + yaw)
             #self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
             self.camera_turn_pub.publish(camera_turn_msg)
 

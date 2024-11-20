@@ -566,6 +566,18 @@ def pathfinding(a,b,Liobs):
     c=(-75.54357875539259, -100.38540985462997)
     d=(-70.53320512217539, -77.11176291680574)"""
 
+    for (c,r) in Liobs :
+        if(r > dist(c,a)): #si a dans l'obstacle on le 'pousse' au bord
+            temp = (a[0]-c[0],a[1]-c[1])
+            norm = np.sqrt(temp[0]**2 + temp[1]**2)
+            temp = (temp[0]*(r+2)/norm,temp[1]*(r+2)/norm)
+            a = (int(c[0]+temp[0]),int(c[1]+temp[1]))
+        if(r > dist(c,b)): #si b dans l'obstacle on le 'pousse' au bord
+            temp = (b[0]-c[0],b[1]-c[1])
+            norm = np.sqrt(temp[0]**2 + temp[1]**2)
+            temp = (temp[0]*(r+2)/norm,temp[1]*(r+2)/norm)
+            b = (int(c[0]+temp[0]),int(c[1]+temp[1]))
+
     ajoutept(g,a,Liobs)
     ajoutept(g,b,Liobs)
     if(verif(a,b,c1,c2,Liobs)):
@@ -600,4 +612,4 @@ for i in range(len(path)-1):
 
 
 
-#plt.show()
+plt.show()

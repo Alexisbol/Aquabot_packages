@@ -15,7 +15,7 @@ class Mission(Node):
         self.ping_subscription = self.create_subscription(
             ParamVec,
             'aquabot/sensors/acoustics/receiver/range_bearing',
-            self.ping_callback(),
+            self.ping_callback,
             10)
 
         self.odom_subscription = self.create_subscription(
@@ -90,40 +90,42 @@ class Mission(Node):
         self.phase = msg
 
     def qrcode_callback(self,msg):
-        if(msg.data != None):
+        if(msg.data != 'null'):
             self.qrcode = msg
             self.qrcode_received = True
 
     def timer_callback(self):
-        self.get_logger().info(self.status)
-
         if(self.status == 'INITIALIZED'):
             if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
                 self.currentgoal = self.liste_turbines[self.turbinesI]
+                self.get_logger().info(self.status)
+                self.get_logger().info('going to: "%s"' % self.currentgoal.position)
+
 
         if(self.status == 'SEARCH'):
             
             point = Point()
-            point.x = self.currentgoal.position.x
+            point.x = self.currentgoal.position.x + 0.1
             point.y = self.currentgoal.position.y
+            self.goal_publishers.publish(point)
             self.camera_publishers.publish(point)
 
-            point.x+=11 #mettre un point malin à 11m du centre :)
-            self.goal_publishers.publish(point)
-            
             if(not self.proche_goal(20)): #pas assez proche pour etre sur que ce soit le bon qrcode
                 self.qrcode_received = False
 
             if(self.qrcode_received): #QR code scanné
                 self.turbinesI+=1
                 self.qr_publishers.publish(self.qrcode)
+                self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
                 self.currentgoal = self.liste_turbines[self.turbinesI]
+                self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
-            elif(self.proche_goal(1)): #Arrivé mais pas QR code scanné
+            elif(self.proche_goal(10)): #Arrivé mais pas QR code scanné
                 #mettre le point en face du point actuel pour forcer à faire le tour
-                self.currentgoal = self.liste_turbines[self.turbinesI]
-                self.currentgoal.position.x -= 22
+                turbine = self.liste_turbines[self.turbinesI]
+                self.currentgoal.position = turbine.position + (turbine.position - self.odom.pose.pose.position)
+                self.get_logger().info('turning around turbine')
 
             if(self.phase == 2):
                 self.status = 'RALLY'
