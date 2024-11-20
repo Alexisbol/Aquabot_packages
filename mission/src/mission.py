@@ -6,10 +6,17 @@ from sensor_msgs import *
 from std_msgs.msg import *
 from nav_msgs.msg import *
 from geometry_msgs.msg import *
+from ros_gz_interfaces.msg import ParamVec
 
 class Mission(Node):
     def __init__(self):
         super().__init__('mission')
+
+        self.ping_subscription = self.create_subscription(
+            ParamVec,
+            'aquabot/sensors/acoustics/receiver/range_bearing',
+            self.ping_callback(),
+            10)
 
         self.odom_subscription = self.create_subscription(
             Odometry,
@@ -70,6 +77,10 @@ class Mission(Node):
     def odom_callback(self,msg):
         self.odom = msg
         self.odom_received = True
+
+    def ping_callback(self,msg):
+        self.ping = msg
+        self.ping_received = True
 
     def turbinespose_callback(self,msg):
         self.liste_turbines = msg.poses
