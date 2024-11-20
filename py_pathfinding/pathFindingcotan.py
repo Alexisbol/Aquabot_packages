@@ -555,6 +555,8 @@ def pathfinding(a,b,Liobs):
                 arretecourbe(g,s,a0,c1)
             if d["centre"]==c2 and s!=b0:
                 arretecourbe(g,s,b0,c2)
+    
+    
 
     """
     a=(120,250)
@@ -564,12 +566,15 @@ def pathfinding(a,b,Liobs):
 
     ajoutept(g,a,Liobs)
     ajoutept(g,b,Liobs)
+    if(verif(a,b,c1,c2,Liobs)):
+        arretedroite(g,a,b)
 
     l,p=diststar(g,b,a)
     path0=path(g,l)
+    tracegr(g)
     return(path0)
 
-#print(pathfinding((-200,-200),(200,200),Liobs))
+#print(pathfinding((0,0),(168,-60),Liobs))
 
 #print(l)
 #print(path)
@@ -577,18 +582,18 @@ def pathfinding(a,b,Liobs):
 
 
 #for (x,y) in path :
- #   plt.plot(x,y,color='r',marker='x')
+#    plt.plot(x,y,color='r',marker='x')
 
 
-"""
-print(g[d])
-for (x,y) in g[c]["adj"] :
-    plt.plot(x,y,color='r',marker='x')"""
+
+#print(g[d])
+#for (x,y) in g[c]["adj"] :
+#    plt.plot(x,y,color='r',marker='x')
 
 #print(path)
-"""
-for i in range(len(path)-1):
-    print(dist(path[i],path[i+1]))"""
+
+#for i in range(len(path)-1):
+#    print(dist(path[i],path[i+1]))
 
 
 

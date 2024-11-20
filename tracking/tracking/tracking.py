@@ -154,6 +154,7 @@ class Tracking(Node):
             #self.get_logger().info(f"Received path")
             self.path = path  # Enregistrer le chemin dans l'attribut
             self.pathfixed = pathfixed
+            #self.get_logger().info(path)
         future.add_done_callback(handle_response)
         return future
     

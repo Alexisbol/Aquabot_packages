@@ -568,6 +568,8 @@ def pathfinding(a,b,Liobs):
 
     ajoutept(g,a,Liobs)
     ajoutept(g,b,Liobs)
+    if(verif(a,b,c1,c2,Liobs)):
+        arretedroite(g,a,b)
 
     l,p=diststar(g,b,a)
     path0=path(g,l)
