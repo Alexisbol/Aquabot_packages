@@ -60,7 +60,7 @@ class CameraControl(Node):
             angle1 = np.arctan2(self.aim_point.x - odom_point.x, self.aim_point.y - odom_point.y)
             self.get_logger().info('angle1: "%s"' % angle1)
 
-            chemin_optimal= (angle1 - yaw + np.pi) % (2 * np.pi) - np.pi
+            chemin_optimal= (-angle1 + yaw + np.pi) % (2 * np.pi) - np.pi
 
             camera_turn_msg.data = chemin_optimal
             self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
