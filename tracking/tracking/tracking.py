@@ -53,9 +53,9 @@ def norme(v):
     return dist(v,(0,0))
 
 # Constantes de proportionnalité
-k_d = 1.0    # Constante pour la distance
-k_theta = 25  # Constante pour l'orientation
-k_v = 10   # Constante pour ajuster la puissance du moteur linéaire
+k_d = 8    # Constante pour la distance
+k_theta = 10  # Constante pour l'orientation
+k_v = 2   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
 
 def commande(pos, theta, v_actual, omega_actual, objectif):
