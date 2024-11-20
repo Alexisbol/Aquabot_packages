@@ -131,7 +131,7 @@ class Tracking(Node):
         self.ping_subscription = self.create_subscription(
             ParamVec,
             'aquabot/sensors/acoustics/receiver/range_bearing',
-            self.ping_callback(),
+            self.ping_callback,
             10)
         
         self.publisherl = self.create_publisher(Float64,'/aquabot/thrusters/left/thrust',10)
@@ -210,6 +210,8 @@ class Tracking(Node):
         #self.roll, self.pitch, self.yaw = euler_from_quaternion(msg.orientation.x,msg.orientation.y,msg.orientation.z, msg.orientation.w)
         #self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
 
+    def ping_callback(self,msg):
+        a = 0
     
     def commandel_callback(self):
         if self.odom_received and self.path:
@@ -245,20 +247,20 @@ class Tracking(Node):
             #self.get_logger().info('deltaomega: "%s"' % somme)
     def commande_pos_callback(self):
         msg=Float64()
-        angle_objectif = self.ping_subscription.params[1]
-        current_angle = self.yaw
-        if angle_objectif - current_angle > np.pi/16: #environ 10 degre
-            #TODO tourner à gauche
-            msg.data = np.pi/4
-        if angle_objectif - current_angle < -np.pi/16: 
-            #TODO tourner à droite
-            msg.data= - np.pi/4
-        else :
-            self.get_logger().info('diff angle: "%s"' % angle_objectif - current_angle)
-        self.publisher_pos_l.publish(msg)
-        self.publisher_pos_r.publish(msg)
-        self.publisherl.publish(500)
-        self.publisherl.publish(500)
+        #angle_objectif = 0 # self.ping_subscription.params[1]
+        #current_angle = self.yaw
+        #if angle_objectif - current_angle > np.pi/16: #environ 10 degre
+        #    #TODO tourner à gauche
+        #    msg.data = np.pi/4
+        #if angle_objectif - current_angle < -np.pi/16: 
+        #    #TODO tourner à droite
+        #    msg.data= - np.pi/4
+        #else :
+        #    self.get_logger().info('diff angle: "%s"' % angle_objectif - current_angle)
+        #self.publisher_pos_l.publish(msg)
+        #self.publisher_pos_r.publish(msg)
+        #self.publisherl.publish(500)
+        #self.publisherl.publish(500)
 
 
 
