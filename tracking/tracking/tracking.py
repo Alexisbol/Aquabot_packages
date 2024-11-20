@@ -51,15 +51,15 @@ def plusproche(pos,path):
         if d<dist_min :
             dist_min=d
             im=i+1
-    return path[min(len(path)-1,im+20)]
+    return path[min(len(path)-1,im+4)]
 
 def norme(v):
     return dist(v,(0,0))
 
 # Constantes de proportionnalité
-k_d = 8    # Constante pour la distance
-k_theta = 10  # Constante pour l'orientation
-k_v = 2   # Constante pour ajuster la puissance du moteur linéaire
+k_d = 25    # Constante pour la distance
+k_theta = 12  # Constante pour l'orientation
+k_v = 3   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
 
 def commande(pos, theta, v_actual, omega_actual, objectif):

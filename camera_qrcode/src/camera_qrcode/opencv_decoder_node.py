@@ -44,7 +44,7 @@ class OpenCvDecoder(Node):
         if len(data) > 0:
             msg.data = data
             self.publisher_data.publish(msg)
-            self.get_logger().info('Decoded data: ' + data)
+            #self.get_logger().info('Decoded data: ' + data)
             # Calculate the center of the bounding box
             if bbox is not None:
                 bbox_center_x = (bbox[0][0][0] + bbox[0][1][0] + bbox[0][2][0] + bbox[0][3][0]) / 4 #bbox[0][0][0] = x du coin en bas à gauche

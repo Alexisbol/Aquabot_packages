@@ -117,7 +117,7 @@ class Mission(Node):
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
-            if(not self.proche_goal(20)): #pas assez proche pour etre sur que ce soit le bon qrcode
+            if(not self.proche_goal(30)): #pas assez proche pour etre sur que ce soit le bon qrcode
                 self.qrcode_received = False
 
             if(self.qrcode_received): #QR code scanné
@@ -130,10 +130,15 @@ class Mission(Node):
 
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
-            elif(self.proche_goal(15)): #Arrivé mais pas QR code scanné
+            elif(self.proche_goal(20)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
-                self.currentgoal.position.x = turbine.position.x + (turbine.position.x - self.odom.pose.pose.position.x)
-                self.currentgoal.position.y = turbine.position.y + (turbine.position.y - self.odom.pose.pose.position.y)
+                vect = Point()
+                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.2
+                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.2
+
+                self.currentgoal.position.x = (turbine.position.x + vect.x)
+                self.currentgoal.position.y = (turbine.position.y + vect.y)
+
                 self.get_logger().info('turning around turbine')
 
             if(self.phase == 2):
