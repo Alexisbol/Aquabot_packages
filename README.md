@@ -61,6 +61,9 @@ sudo apt install ros-humble-robot-localization
 ```
 ros2 launch aquabot_gz competition.launch.py world:=aquabot_regatta
 ```
+```
+ros2 launch aquabot_gz competition.launch.py world:=aquabot_windturbines_easy headless:=true competition_mode:=true
+```
 
 2) Start rqt ou rviz2
 rqt est plus simple 
