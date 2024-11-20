@@ -54,7 +54,7 @@ def main(args=None):
     camera_turn_node = CameraControl()
     
     # Ajout d'un timer pour la mise à jour périodique
-    timer_period = 0.05  # 50ms
+    timer_period = 0.1  # 50ms
     camera_turn_node.create_timer(timer_period, camera_turn_node.timer_callback)
     
     rclpy.spin(camera_turn_node)
