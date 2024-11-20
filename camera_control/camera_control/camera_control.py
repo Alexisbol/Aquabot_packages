@@ -34,7 +34,7 @@ class CameraControl(Node):
             Odometry,
             '/aquabot/odom',
             self.odom_callback,
-            1)
+            10)
             
         self.subscription = self.create_subscription(
             Point,
@@ -45,25 +45,26 @@ class CameraControl(Node):
         self.odom_pose = None
         self.aim_point = None
 
-        
+    def calculate_optimal_angle(self, current_yaw, target_angle):
+        # Calcul du chemin le plus court entre deux angles
+        angle_diff = (target_angle - current_yaw + np.pi) % (2 * np.pi) - np.pi
+        return angle_diff
+
     def timer_callback(self):
-        #self.get_logger().info('udpate_odom: "%s"' % self.odom_pose)
-        #self.get_logger().info('udpate_aim: "%s"' % self.aim_point)
-        if self.odom_pose != None and self.aim_point != None:
-            camera_turn_msg = Float64()
-        
+        if self.odom_pose is not None and self.aim_point is not None:
             odom_point = self.odom_pose.position
             odom_quaternion = self.odom_pose.orientation
-            yaw = yaw_from_quaternion(odom_quaternion)
-            #self.get_logger().info('-------------------------')
-            #self.get_logger().info('yaw: "%s"' % yaw)
-            angle1 = np.arctan2(self.aim_point.x - odom_point.x, self.aim_point.y - odom_point.y)
-            #self.get_logger().info('angle1: "%s"' % angle1)
+            current_yaw = yaw_from_quaternion(odom_quaternion)
 
-            chemin_optimal= (-angle1 + yaw + np.pi) % (2 * np.pi) - np.pi
-
-            camera_turn_msg.data = chemin_optimal
-            #self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
+            # Calculer l'angle vers le point de visée
+            target_angle = np.arctan2(self.aim_point.y - odom_point.y, 
+                                      self.aim_point.x - odom_point.x)
+            
+            # Ajuster l'angle pour le moteur de la caméra
+            camera_angle = self.calculate_optimal_angle(current_yaw, target_angle)
+            
+            camera_turn_msg = Float64()
+            camera_turn_msg.data = camera_angle
             self.camera_turn_pub.publish(camera_turn_msg)
 
     def odom_callback(self, msg):

@@ -113,7 +113,7 @@ class Mission(Node):
             self.goal_publishers.publish(point)
 
             pointcam = Point()
-            pointcam.x = self.currentcameragoal.position.x + 0.1
+            pointcam.x = self.currentcameragoal.position.x
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
@@ -130,8 +130,7 @@ class Mission(Node):
 
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
-            elif(self.proche_goal(10)): #Arrivé mais pas QR code scanné
-                #mettre le point en face du point actuel pour forcer à faire le tour
+            elif(self.proche_goal(15)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
                 self.currentgoal.position.x = turbine.position.x + (turbine.position.x - self.odom.pose.pose.position.x)
                 self.currentgoal.position.y = turbine.position.y + (turbine.position.y - self.odom.pose.pose.position.y)
@@ -139,6 +138,7 @@ class Mission(Node):
 
             if(self.phase == 2):
                 self.status = 'RALLY'
+                self.get_logger().info(self.status)
 
         if(self.status == 'RALLY'):
             self.turbinesI = 0

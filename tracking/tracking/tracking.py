@@ -14,6 +14,9 @@ from std_msgs.msg import Float64
 import numpy as np
 from sensor_msgs.msg import Imu
 
+from ros_gz_interfaces.msg import ParamVec
+
+
 def euler_from_quaternion(x,y,z,w):
     """
     x = quaternion.x
@@ -124,6 +127,12 @@ class Tracking(Node):
             self.imu_callback,
             10  # QoS profile (10 est une bonne valeur par défaut)
         )
+
+        self.ping_subscription = self.create_subscription(
+            ParamVec,
+            'aquabot/sensors/acoustics/receiver/range_bearing',
+            self.ping_callback(),
+            10)
         
         self.publisherl = self.create_publisher(Float64,'/aquabot/thrusters/left/thrust',10)
         self.timer=self.create_timer(0.5,self.commandel_callback)
@@ -131,6 +140,11 @@ class Tracking(Node):
         self.timer=self.create_timer(0.5,self.commander_callback)
         self.timer=self.create_timer(1,self.updatepath_callback)
         self.publisherpath = self.create_publisher(Pathfixed,'/aquabot/currentpath',10)
+
+        self.publisher_pos_l = self.create_publisher(Float64,'/aquabot/thrusters/left/pos',10)
+        self.publisher_pos_r = self.create_publisher(Float64,'/aquabot/thrusters/right/pos',10)
+        self.timer=self.create_timer(0.5,self.commande_pos_callback)
+
 
         self.odom_received = False
         self.goal_received = False
@@ -229,6 +243,23 @@ class Tracking(Node):
 
             #self.get_logger().info('deltav: "%s"' % diff)
             #self.get_logger().info('deltaomega: "%s"' % somme)
+    def commande_pos_callback(self):
+        msg=Float64()
+        angle_objectif = self.ping_subscription.params[1]
+        current_angle = self.yaw
+        if angle_objectif - current_angle > np.pi/16: #environ 10 degre
+            #TODO tourner à gauche
+            msg.data = np.pi/4
+        if angle_objectif - current_angle < -np.pi/16: 
+            #TODO tourner à droite
+            msg.data= - np.pi/4
+        else :
+            self.get_logger().info('diff angle: "%s"' % angle_objectif - current_angle)
+        self.publisher_pos_l.publish(msg)
+        self.publisher_pos_r.publish(msg)
+        self.publisherl.publish(500)
+        self.publisherl.publish(500)
+
 
 
 def main():
