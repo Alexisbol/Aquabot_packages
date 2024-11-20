@@ -61,6 +61,7 @@ class Mission(Node):
 
         self.turbinesI = 0
         self.currentgoal = Point()
+        self.currentcameragoal = Point()
 
         self.status = 'INITIALIZED'
 
@@ -99,17 +100,22 @@ class Mission(Node):
             if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
                 self.currentgoal = self.liste_turbines[self.turbinesI]
+                self.currentcameragoal = self.currentgoal
                 self.get_logger().info(self.status)
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
 
         if(self.status == 'SEARCH'):
-            
+
             point = Point()
             point.x = self.currentgoal.position.x + 0.1
             point.y = self.currentgoal.position.y
             self.goal_publishers.publish(point)
-            self.camera_publishers.publish(point)
+
+            pointcam = Point()
+            pointcam.x = self.currentcameragoal.position.x + 0.1
+            pointcam.y = self.currentcameragoal.position.y
+            self.camera_publishers.publish(pointcam)
 
             if(not self.proche_goal(20)): #pas assez proche pour etre sur que ce soit le bon qrcode
                 self.qrcode_received = False
@@ -118,13 +124,17 @@ class Mission(Node):
                 self.turbinesI+=1
                 self.qr_publishers.publish(self.qrcode)
                 self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
+                
                 self.currentgoal = self.liste_turbines[self.turbinesI]
+                self.currentcameragoal = self.currentgoal
+
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
             elif(self.proche_goal(10)): #Arrivé mais pas QR code scanné
                 #mettre le point en face du point actuel pour forcer à faire le tour
                 turbine = self.liste_turbines[self.turbinesI]
-                self.currentgoal.position = turbine.position + (turbine.position - self.odom.pose.pose.position)
+                self.currentgoal.position.x = turbine.position.x + (turbine.position.x - self.odom.pose.pose.position.x)
+                self.currentgoal.position.y = turbine.position.y + (turbine.position.y - self.odom.pose.pose.position.y)
                 self.get_logger().info('turning around turbine')
 
             if(self.phase == 2):

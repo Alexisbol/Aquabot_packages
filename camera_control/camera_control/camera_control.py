@@ -34,7 +34,7 @@ class CameraControl(Node):
             Odometry,
             '/aquabot/odom',
             self.odom_callback,
-            10)
+            1)
             
         self.subscription = self.create_subscription(
             Point,
@@ -55,15 +55,15 @@ class CameraControl(Node):
             odom_point = self.odom_pose.position
             odom_quaternion = self.odom_pose.orientation
             yaw = yaw_from_quaternion(odom_quaternion)
-            self.get_logger().info('-------------------------')
-            self.get_logger().info('yaw: "%s"' % yaw)
+            #self.get_logger().info('-------------------------')
+            #self.get_logger().info('yaw: "%s"' % yaw)
             angle1 = np.arctan2(self.aim_point.x - odom_point.x, self.aim_point.y - odom_point.y)
-            self.get_logger().info('angle1: "%s"' % angle1)
+            #self.get_logger().info('angle1: "%s"' % angle1)
 
             chemin_optimal= (-angle1 + yaw + np.pi) % (2 * np.pi) - np.pi
 
             camera_turn_msg.data = chemin_optimal
-            self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
+            #self.get_logger().info('Publishing: "%s"' % camera_turn_msg.data)
             self.camera_turn_pub.publish(camera_turn_msg)
 
     def odom_callback(self, msg):

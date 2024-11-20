@@ -43,7 +43,7 @@ class OpenCvDecoder(Node):
         angle = Float64()
         if len(data) > 0:
             msg.data = data
-            self.publisher.publish(msg)
+            self.publisher_data.publish(msg)
             self.get_logger().info('Decoded data: ' + data)
             # Calculate the center of the bounding box
             if bbox is not None:
@@ -94,13 +94,13 @@ class OpenCvDecoder(Node):
                     #self.get_logger().info(f'Translation vector: {tvec}')
                     #self.get_logger().info(f'Rotation vector: {rvec}')
                     #self.get_logger().info(f'Distance: {np.linalg.norm(tvec[0:2])}')
-                    self.get_logger().info(f'Angle: {np.arctan2(tvec[0], tvec[2])*180/np.pi}') #angle en degré
-                    angle.data = np.arctan2(tvec[0], tvec[2]) #angle en radian
+                    #self.get_logger().info(f'Angle: {np.arctan2(tvec[0], tvec[2])*180/np.pi}') #angle en degré
+                    angle.data = Float64(np.arctan2(tvec[0], tvec[2])) #angle en radian
 
         else:
             msg.data = 'null'
             self.publisher_data.publish(msg)
-            angle.data = 10 # Valeur impossible pour dire que l'angle n'est pas bon
+            angle.data = 10.0 # Valeur impossible pour dire que l'angle n'est pas bon
             self.publisher_angle.publish(angle)
             #self.get_logger().info('No QR code detected')
 
