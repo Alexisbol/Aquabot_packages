@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs import *
@@ -40,7 +42,7 @@ class Mission(Node):
         self.camera_publishers = self.create_publisher(Point,'/aquabot/camera_look_at',10)
         self.qr_publishers = self.create_publisher(String,'/vrx/windturbineinspection/windturbine_checkup',10)
 
-        self.timers = self.create_timer(0.1, self.timer_callback)
+        self.timer = self.create_timer(0.5, self.timer_callback)
 
         self.odom = Odometry()
         self.odom_received = False
@@ -66,15 +68,15 @@ class Mission(Node):
             return False
 
     def odom_callback(self,msg):
-        self.odom = msg.data
+        self.odom = msg
         self.odom_received = True
 
     def turbinespose_callback(self,msg):
-        self.liste_turbines = msg.data
+        self.liste_turbines = msg
         self.turbines_received = True
 
     def phase_callback(self,msg):
-        self.phase = msg.data
+        self.phase = msg
 
     def qrcode_callback(self,msg):
         if(msg.data != None):
@@ -82,8 +84,10 @@ class Mission(Node):
             self.qrcode_received = True
 
     def timer_callback(self):
+        self.get_logger().info(self.status)
+
         if(self.status == 'INITIALIZED'):
-            if(self.turbines_received and self.phase == 1):
+            if(self.turbines_received):
                 self.status = 'SEARCH'
 
         if(self.status == 'SEARCH'):
@@ -129,14 +133,14 @@ class Mission(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    Mission = Mission()
+    mission = Mission()
 
-    rclpy.spin(Mission)
+    rclpy.spin(mission)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    Mission.destroy_node()
+    mission.destroy_node()
     rclpy.shutdown()
 
 

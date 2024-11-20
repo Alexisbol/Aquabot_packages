@@ -14,5 +14,7 @@ def generate_launch_description():
     sl.node('py_pathfinding', 'pathfinding')
 
     sl.node('tracking')
+
+    sl.node('mission', 'mission.py')
     
     return sl.launch_description()
