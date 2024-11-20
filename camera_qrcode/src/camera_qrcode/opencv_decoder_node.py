@@ -95,7 +95,7 @@ class OpenCvDecoder(Node):
                     #self.get_logger().info(f'Rotation vector: {rvec}')
                     #self.get_logger().info(f'Distance: {np.linalg.norm(tvec[0:2])}')
                     #self.get_logger().info(f'Angle: {np.arctan2(tvec[0], tvec[2])*180/np.pi}') #angle en degré
-                    angle.data = Float64(np.arctan2(tvec[0], tvec[2])) #angle en radian
+                    angle.data = float(np.arctan2(tvec[0], tvec[2])) #angle en radian
 
         else:
             msg.data = 'null'
