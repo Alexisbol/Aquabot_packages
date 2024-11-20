@@ -60,8 +60,8 @@ class Mission(Node):
     def proche_goal(self,dist):
         x = self.odom.pose.pose.position.x
         y = self.odom.pose.pose.position.y
-        gx = self.currentgoal.x
-        gy = self.currentgoal.y
+        gx = self.currentgoal.position.x
+        gy = self.currentgoal.position.y
         if(abs(x-gx)<dist and abs(y-gy)<dist):
             return True
         else:
@@ -72,7 +72,7 @@ class Mission(Node):
         self.odom_received = True
 
     def turbinespose_callback(self,msg):
-        self.liste_turbines = msg
+        self.liste_turbines = msg.poses
         self.turbines_received = True
 
     def phase_callback(self,msg):
@@ -80,22 +80,26 @@ class Mission(Node):
 
     def qrcode_callback(self,msg):
         if(msg.data != None):
-            self.qrcode = msg.data
+            self.qrcode = msg
             self.qrcode_received = True
 
     def timer_callback(self):
         self.get_logger().info(self.status)
 
         if(self.status == 'INITIALIZED'):
-            if(self.turbines_received):
+            if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
+                self.currentgoal = self.liste_turbines[self.turbinesI]
 
         if(self.status == 'SEARCH'):
-            #a modif mettre un point proche mais pas exacte
-            self.currentgoal = self.liste_turbines[self.turbinesI]
+            
+            point = Point()
+            point.x = self.currentgoal.position.x
+            point.y = self.currentgoal.position.y
+            self.camera_publishers.publish(point)
 
-            self.goal_publishers.publish(self.currentgoal)
-            self.camera_publishers.publish(self.liste_turbines[self.turbinesI])
+            point.x+=11 #mettre un point malin à 11m du centre :)
+            self.goal_publishers.publish(point)
             
             if(not self.proche_goal(20)): #pas assez proche pour etre sur que ce soit le bon qrcode
                 self.qrcode_received = False
@@ -103,9 +107,12 @@ class Mission(Node):
             if(self.qrcode_received): #QR code scanné
                 self.turbinesI+=1
                 self.qr_publishers.publish(self.qrcode)
+                self.currentgoal = self.liste_turbines[self.turbinesI]
+
             elif(self.proche_goal(1)): #Arrivé mais pas QR code scanné
                 #mettre le point en face du point actuel pour forcer à faire le tour
                 self.currentgoal = self.liste_turbines[self.turbinesI]
+                self.currentgoal.position.x -= 22
 
             if(self.phase == 2):
                 self.status = 'RALLY'

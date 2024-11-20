@@ -6,6 +6,7 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path as Pathfixed
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Point as Pointfixed
 from math import *
 #from transformations import euler_from_quaternion, quaternion_from_euler
 import sys
@@ -102,7 +103,7 @@ class Tracking(Node):
         self.req = Pathfind.Request()
         
         self.subscription = self.create_subscription(
-            Point,
+            Pointfixed,
             'aquabot/goal',
             self.goal_callback,
             10
