@@ -7,6 +7,7 @@ from std_msgs.msg import *
 from nav_msgs.msg import *
 from geometry_msgs.msg import *
 from ros_gz_interfaces.msg import ParamVec
+import numpy as np
 
 class Mission(Node):
     def __init__(self):
@@ -74,6 +75,26 @@ class Mission(Node):
             return True
         else:
             return False
+    
+    def trouver_turbine_la_plus_proche(self):
+        distances = []
+        angles = []
+        for i in range(7): # A verifier ça ne fonctionne surement pas, pb de fréquence
+            distances.append(self.ping.params[2].value.double_value)
+            angles.append(self.ping.params[2].value.double_value)
+        angle = np.median(angles)
+        distance = np.median(distances)
+        yaw = self.odom.pose.pose.orientation.z
+        goal_eolienne_pos = np.array([self.odom.pose.pose.position.x + distance * np.cos(np.pi/2 -angle+yaw),
+                                       self.odom.pose.pose.position.y + distance * np.sin(np.pi/2 -angle+yaw)])
+        distances = np.array([np.linalg.norm(goal_eolienne_pos - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines.poses])
+        closest_turbine_index = np.argmin(distances)
+        self.get_logger().info('distance minimal: "%s"' % np.argmin(distances))
+        self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
+        return self.liste_turbines.poses[closest_turbine_index]
+
+
+
 
     def odom_callback(self,msg):
         self.odom = msg
@@ -125,6 +146,11 @@ class Mission(Node):
                 self.qr_publishers.publish(self.qrcode)
                 self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
                 
+                if(self.turbinesI == len(self.liste_turbines)): #Tous les QR codes scannés
+                    self.status = 'RALLY'
+                    self.get_logger().info(self.status)
+                    self.turbinesI = 0 # reset pour ne pas depasser l'index de la liste
+                
                 self.currentgoal = self.liste_turbines[self.turbinesI]
                 self.currentcameragoal = self.currentgoal
 
@@ -134,6 +160,7 @@ class Mission(Node):
                 turbine = self.liste_turbines[self.turbinesI]
                 vect = Point()
                 vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.2
+
                 vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.2
 
                 self.currentgoal.position.x = (turbine.position.x + vect.x)
@@ -146,7 +173,8 @@ class Mission(Node):
                 self.get_logger().info(self.status)
 
         if(self.status == 'RALLY'):
-            self.turbinesI = 0
+            self.turbinesI = 0 # inutile mais pour etre sur, car deja reset dans le if du qr code
+            self.turbinesI = self.trouver_turbine_la_plus_proche(self)
             self.currentgoal = self.liste_turbines[self.turbinesI] #ca faut voir avec sirena pour l'id defectueuse
 
             #if(self.proche_goal(15)):
