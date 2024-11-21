@@ -81,7 +81,9 @@ class Mission(Node):
         angles = []
         for i in range(7): # A verifier ça ne fonctionne surement pas, pb de fréquence
             distances.append(self.ping.params[2].value.double_value)
-            angles.append(self.ping.params[2].value.double_value)
+            angles.append(self.ping.params[1].value.double_value)
+            self.get_logger().info('self.ping.params[2].value.double_value: "%s"' % self.ping.params[2].value.double_value)
+        self.get_logger().info('self.ping.params[1].value.double_value: "%s"' % self.ping.params[1].value.double_value)
         angle = np.median(angles)
         distance = np.median(distances)
         yaw = self.odom.pose.pose.orientation.z
@@ -118,6 +120,7 @@ class Mission(Node):
 
     def timer_callback(self):
         if(self.status == 'INITIALIZED'):
+            self.get_logger().info('--------------V1--V1------------')
             if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
                 self.currentgoal = self.liste_turbines[self.turbinesI]
