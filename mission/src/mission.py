@@ -77,23 +77,29 @@ class Mission(Node):
             return False
     
     def trouver_turbine_la_plus_proche(self):
-        distances = []
-        angles = []
-        for i in range(7): # A verifier ça ne fonctionne surement pas, pb de fréquence
-            distances.append(self.ping.params[2].value.double_value)
-            angles.append(self.ping.params[1].value.double_value)
-            self.get_logger().info('self.ping.params[2].value.double_value: "%s"' % self.ping.params[2].value.double_value)
-        self.get_logger().info('self.ping.params[1].value.double_value: "%s"' % self.ping.params[1].value.double_value)
-        angle = np.median(angles)
-        distance = np.median(distances)
+        distances_boat_from_goal = []
+        angles_boat_from_goal = []
+        #for i in range(7): # A verifier ça ne fonctionne surement pas, pb de fréquence
+        distances_boat_from_goal.append(self.ping.params[2].value.double_value)
+        angles_boat_from_goal.append(self.ping.params[1].value.double_value)
+        self.get_logger().info('distance = params[2] : "%s"' % self.ping.params[2].value.double_value)
+        self.get_logger().info('angle = params[1]: "%s"' % self.ping.params[1].value.double_value)
+        angle_boat_from_goal = np.median(angles_boat_from_goal)
+        distance_boat_from_goal = np.median(distances_boat_from_goal)
+        self.get_logger().info('distance: "%s"' % distance_boat_from_goal)
+        self.get_logger().info('angle: "%s"' % angle_boat_from_goal)
         yaw = self.odom.pose.pose.orientation.z
-        goal_eolienne_pos = np.array([self.odom.pose.pose.position.x + distance * np.cos(np.pi/2 -angle+yaw),
-                                       self.odom.pose.pose.position.y + distance * np.sin(np.pi/2 -angle+yaw)])
-        distances = np.array([np.linalg.norm(goal_eolienne_pos - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines.poses])
-        closest_turbine_index = np.argmin(distances)
-        self.get_logger().info('distance minimal: "%s"' % np.argmin(distances))
+        self.get_logger().info('yaw: "%s"' % yaw)
+        self.get_logger().info('odom x: "%s"' % self.odom.pose.pose.position.x)
+        self.get_logger().info('odom y: "%s"' % self.odom.pose.pose.position.y)
+        goal_eolienne_pos = np.array([self.odom.pose.pose.position.x + distance_boat_from_goal * np.cos(np.pi/2 - angle_boat_from_goal + yaw),
+                                       self.odom.pose.pose.position.y + distance_boat_from_goal * np.sin(np.pi/2 - angle_boat_from_goal + yaw)])
+
+        distances_eoliennes_from_goal = np.array([np.linalg.norm(goal_eolienne_pos - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        closest_turbine_index = np.argmin(distances_eoliennes_from_goal)
+        self.get_logger().info('distances_eolienne_from_goal: "%s"' % distances_eoliennes_from_goal)
         self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
-        return self.liste_turbines.poses[closest_turbine_index]
+        return closest_turbine_index
 
 
 
@@ -120,8 +126,8 @@ class Mission(Node):
 
     def timer_callback(self):
         if(self.status == 'INITIALIZED'):
-            self.get_logger().info('--------------V1--V1------------')
             if(self.turbines_received and self.odom_received):
+                self.get_logger().info('--------------V8------------')
                 self.status = 'SEARCH'
                 self.currentgoal = self.liste_turbines[self.turbinesI]
                 self.currentcameragoal = self.currentgoal
@@ -152,7 +158,7 @@ class Mission(Node):
                 if(self.turbinesI == len(self.liste_turbines)): #Tous les QR codes scannés
                     self.status = 'RALLY'
                     self.get_logger().info(self.status)
-                    self.turbinesI = 0 # reset pour ne pas depasser l'index de la liste
+                    self.turbinesI = -1 # reset pour ne pas depasser l'index de la liste
                 
                 self.currentgoal = self.liste_turbines[self.turbinesI]
                 self.currentcameragoal = self.currentgoal
@@ -162,9 +168,9 @@ class Mission(Node):
             elif(self.proche_goal(20)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
                 vect = Point()
-                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.2
+                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*0.8
 
-                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.2
+                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*0.8
 
                 self.currentgoal.position.x = (turbine.position.x + vect.x)
                 self.currentgoal.position.y = (turbine.position.y + vect.y)
@@ -174,13 +180,19 @@ class Mission(Node):
             if(self.phase == 2):
                 self.status = 'RALLY'
                 self.get_logger().info(self.status)
+                self.turbinesI = -1 # reset pour ne pas depasser l'index de la liste
 
         if(self.status == 'RALLY'):
-            self.turbinesI = 0 # inutile mais pour etre sur, car deja reset dans le if du qr code
-            self.turbinesI = self.trouver_turbine_la_plus_proche(self)
-            self.currentgoal = self.liste_turbines[self.turbinesI] #ca faut voir avec sirena pour l'id defectueuse
-
-            #if(self.proche_goal(15)):
+            if self.turbinesI == -1:
+                self.turbinesI = self.trouver_turbine_la_plus_proche()
+                self.currentgoal = self.liste_turbines[self.turbinesI]
+                self.currentcameragoal = self.currentgoal
+                self.get_logger().info('going to: "%s"' % self.currentgoal.position)
+                self.status = 'SEARCH' #retour à la recherche à modifier car après le scan on passe à la stabilisation
+            
+            if(self.proche_goal(15)):
+                self.status = 'STABILIZE'
+                self.get_logger().info(self.status)
                 #utiliser la commande de stabilisation
                 
 
