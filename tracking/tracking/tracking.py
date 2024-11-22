@@ -57,7 +57,7 @@ def norme(v):
     return dist(v,(0,0))
 
 # Constantes de proportionnalité
-k_d = 5    # Constante pour la distance
+k_d = 8    # Constante pour la distance
 k_theta = 12  # Constante pour l'orientation
 k_v = 3   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire

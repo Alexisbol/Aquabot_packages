@@ -592,7 +592,8 @@ def pathfinding(a,b,Liobs):
 
     l,p=diststar(g,b,a)
     path0=path(g,l)
-    tracegr(g)
+    #tracegr(g)
+    
     #for (x,y) in l :
     #    plt.plot(x,y,color='r',marker='x')
     #for (x,y) in path0 :
@@ -600,7 +601,7 @@ def pathfinding(a,b,Liobs):
     #print(l)
     return(path0)
 
-#pathfinding((-160,-30),(-114,11),Liobs)
+pathfinding((-160,-30),(-114,11),Liobs)
 
 #print(pathfinding((0,0),(200,200),Liobs))
 
