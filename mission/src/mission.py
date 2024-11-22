@@ -190,10 +190,41 @@ class Mission(Node):
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
                 self.status = 'SEARCH' #retour à la recherche à modifier car après le scan on passe à la stabilisation
             
-            if(self.proche_goal(15)):
+            point = Point()
+            point.x = self.currentgoal.position.x + 0.1
+            point.y = self.currentgoal.position.y
+            self.goal_publishers.publish(point)
+
+            pointcam = Point()
+            pointcam.x = self.currentcameragoal.position.x
+            pointcam.y = self.currentcameragoal.position.y
+            self.camera_publishers.publish(pointcam)
+
+            if(not self.proche_goal(30)): #pas assez proche pour etre sur que ce soit le bon qrcode
+                self.qrcode_received = False
+
+            if(self.qrcode_received): #QR code scanné
+                self.qr_publishers.publish(self.qrcode)
+                self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
                 self.status = 'STABILIZE'
                 self.get_logger().info(self.status)
-                #utiliser la commande de stabilisation
+
+            elif(self.proche_goal(20)): #Arrivé mais pas QR code scanné
+                turbine = self.liste_turbines[self.turbinesI]
+                vect = Point()
+                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.0
+
+                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.0
+
+                self.currentgoal.position.x = (turbine.position.x + vect.x)
+                self.currentgoal.position.y = (turbine.position.y + vect.y)
+
+                self.get_logger().info('turning around turbine')
+
+            
+        if(self.status=='STABILIZE'):
+            self.get_logger().info('stabilizing')
+            
                 
 
             
@@ -202,7 +233,6 @@ class Mission(Node):
 
 
             
-
 
 
 
