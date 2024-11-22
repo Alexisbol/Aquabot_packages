@@ -577,12 +577,12 @@ def pathfinding(a,b,Liobs):
         if(r > dist(c,a)): #si a dans l'obstacle on le 'pousse' au bord
             temp = (a[0]-c[0],a[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+5)/norm,temp[1]*(r+5)/norm)
+            temp = (temp[0]*(r+4)/norm,temp[1]*(r+4)/norm)
             a = (int(c[0]+temp[0]),int(c[1]+temp[1]))
         if(r > dist(c,b)): #si b dans l'obstacle on le 'pousse' au bord
             temp = (b[0]-c[0],b[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+5)/norm,temp[1]*(r+5)/norm)
+            temp = (temp[0]*(r+4)/norm,temp[1]*(r+4)/norm)
             b = (int(c[0]+temp[0]),int(c[1]+temp[1]))
 
     ajoutept(g,a,Liobs)

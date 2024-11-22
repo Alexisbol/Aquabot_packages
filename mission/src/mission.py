@@ -100,16 +100,18 @@ class Mission(Node):
             if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
                 self.currentgoal = self.liste_turbines[self.turbinesI]
-                self.currentcameragoal = self.currentgoal
+                self.currentcameragoal = self.liste_turbines[self.turbinesI]
                 self.get_logger().info(self.status)
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
 
         if(self.status == 'SEARCH'):
-
+            vect = Point()
+            vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+            vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
             point = Point()
-            point.x = self.currentgoal.position.x + 0.1
-            point.y = self.currentgoal.position.y
+            point.x = self.currentgoal.position.x+vect.x*0.0001
+            point.y = self.currentgoal.position.y+vect.y*0.0001
             self.goal_publishers.publish(point)
 
             pointcam = Point()
@@ -130,7 +132,7 @@ class Mission(Node):
 
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
-            elif(self.proche_goal(20)): #Arrivé mais pas QR code scanné
+            elif(self.proche_goal(17)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
                 vect = Point()
                 vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.2
