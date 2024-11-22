@@ -40,8 +40,8 @@ class MinimalService(Node):
             # Extraire les coordonnées x et y
             x, y = pose.position.x, pose.position.y
             # Ajouter chaque éolienne comme obstacle avec un rayon de 10
-            if ((x, y), 8) not in self.liobs :
-                self.liobs.append(((x, y), 8))
+            if ((x, y), 12) not in self.liobs :
+                self.liobs.append(((x, y), 12))
                 #self.get_logger().info(f'Positions des éoliennes mises à jour :{self.liobs}')
 
     def path_callback(self, request, response):
