@@ -365,8 +365,7 @@ def angle(p,c):
 
 def arretecourbe(G,s,t,c):
     tet = angle(s,c[0])-angle(t,c[0])
-    if tet > pi :
-        tet = 2*pi - tet
+    tet = atan2(sin(tet),cos(tet))
     d = abs(tet)*c[1]
 
     G[s]["adj"][t]=[d,c]
@@ -513,10 +512,18 @@ def path(g,l,pas=1):
 
             angle1 = angle(a, centre)
             angle2 = angle(b, centre)
+            if(angle1 < 0):
+                angle1 += 2*pi
+            if(angle2 < 0):
+                angle2 += 2*pi
             # Générer des angles intermédiaires entre les deux points
             if abs(angle2-angle1) < pi  :
+                #print('a')
                 angles = np.linspace(angle1, angle2, n)  # 100 points pour tracer l'arc
             else:
+                #print('b')
+                #print(a,b)
+                #print(angle1*180/pi,angle2*180/pi)
                 angles = np.linspace(angle1,angle2+2*pi, n)  # Pour traiter le cas où l'arc passe par 0 radians
             
             # Calculer les coordonnées des points de l'arc
@@ -570,12 +577,12 @@ def pathfinding(a,b,Liobs):
         if(r > dist(c,a)): #si a dans l'obstacle on le 'pousse' au bord
             temp = (a[0]-c[0],a[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+2)/norm,temp[1]*(r+2)/norm)
+            temp = (temp[0]*(r+5)/norm,temp[1]*(r+5)/norm)
             a = (int(c[0]+temp[0]),int(c[1]+temp[1]))
         if(r > dist(c,b)): #si b dans l'obstacle on le 'pousse' au bord
             temp = (b[0]-c[0],b[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+2)/norm,temp[1]*(r+2)/norm)
+            temp = (temp[0]*(r+5)/norm,temp[1]*(r+5)/norm)
             b = (int(c[0]+temp[0]),int(c[1]+temp[1]))
 
     ajoutept(g,a,Liobs)
@@ -585,9 +592,15 @@ def pathfinding(a,b,Liobs):
 
     l,p=diststar(g,b,a)
     path0=path(g,l)
+    tracegr(g)
+    #for (x,y) in l :
+    #    plt.plot(x,y,color='r',marker='x')
+    #for (x,y) in path0 :
+    #    plt.plot(x,y,color='g',marker='.')
+    #print(l)
     return(path0)
 
-#print(pathfinding((-200,-200),(200,200),Liobs))
+#pathfinding((-160,-30),(-114,11),Liobs)
 
 #print(pathfinding((0,0),(200,200),Liobs))
 
@@ -596,8 +609,7 @@ def pathfinding(a,b,Liobs):
 #tracegr(g)
 
 
-#for (x,y) in path :
- #   plt.plot(x,y,color='r',marker='x')
+
 
 
 """
@@ -612,4 +624,4 @@ for i in range(len(path)-1):
 
 
 
-plt.show()
+#plt.show()
