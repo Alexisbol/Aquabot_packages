@@ -570,8 +570,11 @@ def pathfinding(a,b,Liobs):
         arretedroite(g,a,b)
 
     l,p=diststar(g,b,a)
+
+    for s in g :
+        print(g[s]["centre"])
     path0=path(g,l)
-    tracegr(g)
+    #tracegr(g)
     return(path0)
 
 #print(pathfinding((0,0),(168,-60),Liobs))
@@ -579,7 +582,7 @@ def pathfinding(a,b,Liobs):
 #print(l)
 #print(path)
 #tracegr(g)
-
+#path=pathfinding((-160,-30),(-150,-35),Liobs)
 
 #for (x,y) in path :
 #    plt.plot(x,y,color='r',marker='x')
