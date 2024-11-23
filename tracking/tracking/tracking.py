@@ -86,6 +86,15 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     # Calculer les commandes pour chaque moteur en compensant les erreurs
     V_gauche = k_v * delta_v + k_omega * delta_omega
     V_droite = k_v * delta_v - k_omega * delta_omega
+
+    #Si jamais on est en ligne droite on accèlere
+    if (V_gauche == V_droite):
+        self.get_logger().info(f"ON accélère")
+        k_ligne_droite = 1000
+
+        V_gauche = V_gauche*k_ligne_droite
+        V_droite = V_droite*k_ligne_droite
+
     
     return V_gauche, V_droite,angle_error,delta_v,delta_omega,theta
 
@@ -252,6 +261,7 @@ class Tracking(Node):
 
             #self.get_logger().info('deltav: "%s"' % diff)
             #self.get_logger().info('deltaomega: "%s"' % somme)
+    
     def commande_pos_callback(self):
         msg=Float64()
         #angle_objectif = 0 # self.ping_subscription.params[1]
@@ -268,7 +278,6 @@ class Tracking(Node):
         #self.publisher_pos_r.publish(msg)
         #self.publisherl.publish(500)
         #self.publisherl.publish(500)
-
 
 
 def main():
