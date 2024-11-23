@@ -38,11 +38,11 @@ class OpenCvDecoder(Node):
         current_frame = self.br.imgmsg_to_cv2(msg)
 
         # Decode image
-        data,bbox,rectifiedImage = self.qr_decoder.detectAndDecode(current_frame)
+        dat,bbox,rectifiedImage = self.qr_decoder.detectAndDecode(current_frame)
         msg = String()
         angle = Float64()
-        if len(data) > 0:
-            msg.data = data
+        if len(dat) > 0:
+            msg.data = dat
             self.publisher_data.publish(msg)
             #self.get_logger().info('Decoded data: ' + data)
             # Calculate the center of the bounding box

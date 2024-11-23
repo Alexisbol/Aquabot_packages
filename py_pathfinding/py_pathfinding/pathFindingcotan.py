@@ -567,22 +567,16 @@ def pathfinding(a,b,Liobs):
             if d["centre"]==c2[0] and s!=b0:
                 arretecourbe(g,s,b0,c2)
 
-    """
-    a=(120,250)
-    b=(-50,-250)
-    c=(-75.54357875539259, -100.38540985462997)
-    d=(-70.53320512217539, -77.11176291680574)"""
-
     for (c,r) in Liobs :
         if(r > dist(c,a)): #si a dans l'obstacle on le 'pousse' au bord
             temp = (a[0]-c[0],a[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+4)/norm,temp[1]*(r+4)/norm)
+            temp = (temp[0]*(r+5)/(norm),temp[1]*(r+5)/(norm))
             a = (int(c[0]+temp[0]),int(c[1]+temp[1]))
         if(r > dist(c,b)): #si b dans l'obstacle on le 'pousse' au bord
             temp = (b[0]-c[0],b[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+4)/norm,temp[1]*(r+4)/norm)
+            temp = (temp[0]*(r+5)/norm,temp[1]*(r+5)/norm)
             b = (int(c[0]+temp[0]),int(c[1]+temp[1]))
 
     ajoutept(g,a,Liobs)
@@ -601,7 +595,7 @@ def pathfinding(a,b,Liobs):
     #print(l)
     return(path0)
 
-pathfinding((-160,-30),(-114,11),Liobs)
+#pathfinding((-160,-30),(-114,11),Liobs)
 
 #print(pathfinding((0,0),(200,200),Liobs))
 

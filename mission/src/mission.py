@@ -7,6 +7,7 @@ from std_msgs.msg import *
 from nav_msgs.msg import *
 from geometry_msgs.msg import *
 from ros_gz_interfaces.msg import ParamVec
+import numpy as np
 
 class Mission(Node):
     def __init__(self):
@@ -47,7 +48,7 @@ class Mission(Node):
 
         self.goal_publishers = self.create_publisher(Point,'/aquabot/goal',10)
         self.camera_publishers = self.create_publisher(Point,'/aquabot/camera_look_at',10)
-        self.qr_publishers = self.create_publisher(String,'/vrx/windturbineinspection/windturbine_checkup',10)
+        self.qr_publishers = self.create_publisher(String,'/vrx/windturbinesinspection/windturbine_checkup',10)
 
         self.timer = self.create_timer(0.5, self.timer_callback)
 
@@ -107,11 +108,14 @@ class Mission(Node):
 
         if(self.status == 'SEARCH'):
             vect = Point()
-            vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
-            vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+            vect.x = -1*(self.currentgoal.position.x - self.odom.pose.pose.position.x)
+            vect.y = -1*(self.currentgoal.position.y - self.odom.pose.pose.position.y)
+            norm = np.sqrt(vect.x**2 + vect.y**2)
+            vect.x = vect.x/norm
+            vect.y = vect.y/norm
             point = Point()
-            point.x = self.currentgoal.position.x+vect.x*0.0001
-            point.y = self.currentgoal.position.y+vect.y*0.0001
+            point.x = self.currentgoal.position.x+vect.x*1+0.1
+            point.y = self.currentgoal.position.y+vect.y*1
             self.goal_publishers.publish(point)
 
             pointcam = Point()
@@ -119,7 +123,7 @@ class Mission(Node):
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
-            if(not self.proche_goal(30)): #pas assez proche pour etre sur que ce soit le bon qrcode
+            if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
                 self.qrcode_received = False
 
             if(self.qrcode_received): #QR code scanné
@@ -132,14 +136,15 @@ class Mission(Node):
 
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
-            elif(self.proche_goal(17)): #Arrivé mais pas QR code scanné
+            elif(self.proche_goal(15)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
                 vect = Point()
-                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.2
-                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.2
+                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)
+                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)
+                norm = np.sqrt(vect.x**2 + vect.y**2)
 
-                self.currentgoal.position.x = (turbine.position.x + vect.x)
-                self.currentgoal.position.y = (turbine.position.y + vect.y)
+                self.currentgoal.position.x = turbine.position.x + (norm*np.cos(0))
+                self.currentgoal.position.y = turbine.position.y + (norm*np.sin(1))
 
                 self.get_logger().info('turning around turbine')
 
@@ -149,8 +154,7 @@ class Mission(Node):
 
         if(self.status == 'RALLY'):
             self.turbinesI = 0
-            self.currentgoal = self.liste_turbines[self.turbinesI] #ca faut voir avec sirena pour l'id defectueuse
-
+            self.currentgoal = self.liste_turbines[self.turbinesI] 
             #if(self.proche_goal(15)):
                 #utiliser la commande de stabilisation
                 
