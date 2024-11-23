@@ -62,32 +62,39 @@ k_theta = 13  # Constante pour l'orientation
 k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-def commande(pos, theta, v_actual, omega_actual, objectif):
+Kp = 5
+Ktheta = 10
+
+def commande(pos, theta, objectif, objectiforientation = "None"):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
     x_target, y_target=objectif
     x,y=pos
-    # Calcul de la distance et de l'angle vers la cible
-    distance_target = sqrt((x_target - x)**2 + (y_target - y)**2)
-    theta_target = atan2(y_target - y, x_target - x)
-    
-    # Calcul de l'erreur d'angle
-    angle_error = theta_target - theta
-    # Normaliser l'angle dans l'intervalle [-pi, pi]
-    angle_error = atan2(sin(angle_error),cos(angle_error))
-    
-    # Définir la vitesse linéaire et angulaire désirée
-    v_desired = k_d * distance_target
-    omega_desired = k_theta * angle_error
-    
-    # Calcul des erreurs de vitesse linéaire et angulaire
-    delta_v = v_desired - norme(v_actual)
-    delta_omega = omega_desired - omega_actual
-    
-    # Calculer les commandes pour chaque moteur en compensant les erreurs
-    V_gauche = k_v * delta_v + k_omega * delta_omega
-    V_droite = k_v * delta_v - k_omega * delta_omega
-    
-    return V_gauche, V_droite,angle_error,delta_v,delta_omega,theta
+
+    if(objectiforientation == "None"):
+        vect = (x_target - x,y_target - y)
+        norm = np.sqrt(vect[0]**2 + vect[1]**2)
+        vect = (5*vect.x/norm,5*vect.y/norm)
+        objectiforientation = (x_target+vect[0],y_target+vect[1])
+
+    deltaX = x_target-x
+    deltaY = y_target-y
+    norm = np.sqrt(deltaX**2 + deltaY**2)
+
+    alpha = np.arctan2(deltaY, deltaX) - theta
+
+    if(abs(alpha)<np.pi/4):
+        phi = alpha
+        Np = Kp*norm
+    else:
+        phi = alpha + np.pi
+        Np = -1*Kp*norm
+
+    deltaTheta = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)-theta
+    Ntheta = Ktheta*deltaTheta
+
+    Nd = Np + Ntheta
+    Ng = Np - Ntheta
+    return Nd,Ng,phi
 
 class Tracking(Node):
     def __init__(self):
@@ -135,16 +142,13 @@ class Tracking(Node):
             10)
         
         self.publisherl = self.create_publisher(Float64,'/aquabot/thrusters/left/thrust',10)
-        self.timer=self.create_timer(0.5,self.commandel_callback)
+        self.timer=self.create_timer(0.2,self.commande_callback)
         self.publisherr = self.create_publisher(Float64,'/aquabot/thrusters/right/thrust',10)
-        self.timer=self.create_timer(0.5,self.commander_callback)
         self.timer=self.create_timer(1,self.updatepath_callback)
         self.publisherpath = self.create_publisher(Pathfixed,'/aquabot/currentpath',10)
 
         self.publisher_pos_l = self.create_publisher(Float64,'/aquabot/thrusters/left/pos',10)
         self.publisher_pos_r = self.create_publisher(Float64,'/aquabot/thrusters/right/pos',10)
-        self.timer=self.create_timer(0.5,self.commande_pos_callback)
-
 
         self.odom_received = False
         self.goal_received = False
@@ -220,56 +224,21 @@ class Tracking(Node):
     def ping_callback(self,msg):
         a = 0
     
-    def commandel_callback(self):
+    def commande_callback(self):
         if self.odom_received and self.path:
-            msg=Float64()
-            #self.get_logger().info('Path: "%s"' % self.path)
-            (right_Thrust,lt,theta,somme,diff,yaw)= commande(self.posbateau,self.yaw,self.vbateau,self.wbateau,plusproche(self.posbateau,self.path))
-            #self.get_logger().info('accel gauche: "%s"' % lt)
+            Ndmsg=Float64()
+            Ngmsg=Float64()
+            Thetamsg=Float64()
+            (Nd,Ng,theta)= commande(self.posbateau,self.yaw,plusproche(self.posbateau,self.path))
 
-            msg.data=float(lt)
-            self.publisherl.publish(msg)
+            Ndmsg.data=float(Nd)
+            Ngmsg.data=float(Ng)
+            Thetamsg.data=float(theta)
 
-    def commander_callback(self):
-        if self.odom_received and self.path:
-            msg=Float64()
-            #self.get_logger().info('self.yaw: "%s"' % self.yaw)
-            self.objectif=plusproche(self.posbateau,self.path)
-            (right_Thrust,lt,angle_error,somme,diff,yaw)= commande(self.posbateau,self.yaw,self.vbateau,self.wbateau,self.objectif)                        
-            
-            msg.data=float(right_Thrust)
-            self.publisherr.publish(msg)
-
-            #self.get_logger().info('accel droit: "%s"' % msg.data)
-
-            #self.get_logger().info(f"objectif :{self.objectif}" ) 
-            #self.get_logger().info(f"pos:{self.posbateau}")
-            self.objectif=plusproche(self.posbateau,self.path)
-
-            #self.get_logger().info(f"angle:{angle(self.objectif,self.posbateau)}")
-            #self.get_logger().info('angle_error: "%s"' % angle_error)
-            #self.get_logger().info('yaw: "%s"' % yaw)
-
-            #self.get_logger().info('deltav: "%s"' % diff)
-            #self.get_logger().info('deltaomega: "%s"' % somme)
-    def commande_pos_callback(self):
-        msg=Float64()
-        #angle_objectif = 0 # self.ping_subscription.params[1]
-        #current_angle = self.yaw
-        #if angle_objectif - current_angle > np.pi/16: #environ 10 degre
-        #    #TODO tourner à gauche
-        #    msg.data = np.pi/4
-        #if angle_objectif - current_angle < -np.pi/16: 
-        #    #TODO tourner à droite
-        #    msg.data= - np.pi/4
-        #else :
-        #    self.get_logger().info('diff angle: "%s"' % angle_objectif - current_angle)
-        #self.publisher_pos_l.publish(msg)
-        #self.publisher_pos_r.publish(msg)
-        #self.publisherl.publish(500)
-        #self.publisherl.publish(500)
-
-
+            self.publisherl.publish(Ngmsg)
+            self.publisherr.publish(Ndmsg)
+            self.publisher_pos_l.publish(Thetamsg)
+            self.publisher_pos_r.publish(Thetamsg)
 
 def main():
     rclpy.init()
