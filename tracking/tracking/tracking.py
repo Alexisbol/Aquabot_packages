@@ -13,7 +13,6 @@ import sys
 from std_msgs.msg import Float64
 import numpy as np
 from sensor_msgs.msg import Imu
-
 from ros_gz_interfaces.msg import ParamVec
 
 
@@ -271,7 +270,6 @@ class Tracking(Node):
         #self.publisherl.publish(500)
 
     def stabiliser_position(self):
-
         distance_voulue = 10.0
 
         #Calcul erreur position
@@ -294,16 +292,45 @@ class Tracking(Node):
             msg_pos_left.data = motor_angle
             msg_pos_right.data = -motor_angle  # Inverse pour tourner
         else:
-            msg_pos_l.data = 0.0
-            msg_pos_r.data = 0.0
+            msg_pos_left.data = 0.0
+            msg_pos_right.data = 0.0
 
         #Publication position moteurs
-        self.publisher_pos_l.publish(msg_pos_l)
-        self.publisher_pos_r.publish(msg_pos_r)
+        self.publisher_pos_l.publish(msg_pos_left)
+        self.publisher_pos_r.publish(msg_pos_right)
 
         #Poussée 
+        thrust_left = Float64()
+        thrust_right = Float64()
 
-    
+        # Calcul de la poussée en fonction de la distance
+        distance_error = distance_réelle - distance_voulue
+
+        # Gains de contrôle
+        K_p_distance = 200.0  # Gain proportionnel pour la distance
+        K_p_angle = 300.0    # Gain proportionnel pour l'angle
+
+        base_thrust = K_p_distance * distance_error
+        angle_correction = K_p_angle * err_angle
+
+        # Limitation de la poussée
+        MAX_THRUST = 5000.0
+        thrust_left.data = max(min(base_thrust + angle_correction, MAX_THRUST), -MAX_THRUST)
+        thrust_right.data = max(min(base_thrust - angle_correction, MAX_THRUST), -MAX_THRUST)
+
+        # Réduction de la poussée si proche de la position cible
+        if abs(distance_error) < POSITION_TOLERANCE:
+            #Peut-être réduire de façon proportionnel à la distance
+            thrust_left.data *= 0.5
+            thrust_right.data *= 0.5
+
+        # Publication de la poussée
+        self.publisherl.publish(thrust_left)
+        self.publisherr.publish(thrust_right)
+
+
+
+
 def main():
     rclpy.init()
 
