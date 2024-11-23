@@ -60,6 +60,8 @@ class Mission(Node):
 
         self.timer = self.create_timer(1, self.timer_callback)
 
+        self.previouspahse = 0
+
         self.odom = Odometry()
         self.odom_received = False
         self.liste_turbines = PoseArray()
@@ -78,8 +80,8 @@ class Mission(Node):
         self.liste_turbines_reste = PoseArray()
 
         # Initialize deques for sliding windows
-        self.distance_window = deque(maxlen=10)  # For distances
-        self.angle_window = deque(maxlen=3)     # For angles
+        self.distance_window = deque(maxlen=7)  # For distances
+        self.angle_window = deque(maxlen=5)     # For angles
 
         # Initialize filter values
         self.filter_angle = 0.0
@@ -129,7 +131,7 @@ class Mission(Node):
 
 
     def phase_callback(self,msg):
-        self.phase = msg
+        self.phase = msg.data
 
     def qrcode_callback(self,msg):
         if(msg.data != 'null'):
@@ -145,6 +147,23 @@ class Mission(Node):
                 min = dist
                 ii = i
         return ii
+    
+    def phase2_la_plus_proche2(self):
+        #self.get_logger().info('distance = params[2] : "%s"' % self.filter_distance)
+        self.get_logger().info('distances window: "%s"' % self.distance_window)
+        yaw = self.odom.pose.pose.orientation.z
+        #self.get_logger().info('yaw: "%s"' % yaw)
+        #self.get_logger().info('odom x: "%s"' % self.odom.pose.pose.position.x)
+        #self.get_logger().info('odom y: "%s"' % self.odom.pose.pose.position.y)
+        pos_bateau = np.array([self.odom.pose.pose.position.x,self.odom.pose.pose.position.y])
+
+        distances_eoliennes_from_bateau = np.array([np.linalg.norm(pos_bateau - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+
+        self.get_logger().info('distances_eolienne_from_bateau: "%s"' % distances_eoliennes_from_bateau)
+
+        closest_turbine_index = np.argmin(distances_eoliennes_from_bateau-self.filter_distance)
+        self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
+        return closest_turbine_index
     
     def phase2_la_plus_proche(self):
         self.get_logger().info('distance = params[2] : "%s"' % self.filter_distance)
@@ -201,6 +220,9 @@ class Mission(Node):
         return np.median(window)
     
     def timer_callback(self):
+        if self.previouspahse != self.phase:
+            self.get_logger().info('phase = "%s"'% self.phase)
+        self.previouspahse = self.phase
         if(self.status == 'INITIALIZED'):
             if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
@@ -267,10 +289,18 @@ class Mission(Node):
                 self.status = 'RALLY'
                 self.get_logger().info(self.status)
                 self.turbinesI = -1 # reset pour ne pas depasser l'index de la liste
+                #norm = np.sqrt(vect.x**2 + vect.y**2)
+                #vect.x = vect.x/norm
+                #vect.y = vect.y/norm
+                
+                self.point.x = 0.0
+                self.point.y = 0.0
+                self.goal_publishers.publish(self.point)
 
         if(self.status == 'RALLY'):
+            self.get_logger().info('phase = "%s"'% self.phase)
             if self.turbinesI == -1:
-                self.turbine_phase_2 = self.phase2_la_plus_proche()
+                self.turbine_phase_2 = self.phase2_la_plus_proche2()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
@@ -284,6 +314,12 @@ class Mission(Node):
             pointcam.x = self.currentcameragoal.position.x
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
+
+            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche2()):
+                self.turbine_phase_2 = self.phase2_la_plus_proche2()
+                self.currentgoal = self.liste_turbines[self.turbine_phase_2]
+                self.currentcameragoal = self.currentgoal
+                self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
 
             if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
                 self.qrcode_received = False
