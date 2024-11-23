@@ -62,8 +62,8 @@ k_theta = 13  # Constante pour l'orientation
 k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-Kp = 5
-Ktheta = 10
+Kp = 120
+Ktheta = 250
 
 def commande(pos, theta, objectif, objectiforientation = "None"):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
@@ -71,10 +71,7 @@ def commande(pos, theta, objectif, objectiforientation = "None"):
     x,y=pos
 
     if(objectiforientation == "None"):
-        vect = (x_target - x,y_target - y)
-        norm = np.sqrt(vect[0]**2 + vect[1]**2)
-        vect = (5*vect.x/norm,5*vect.y/norm)
-        objectiforientation = (x_target+vect[0],y_target+vect[1])
+        objectiforientation = objectif
 
     deltaX = x_target-x
     deltaY = y_target-y
@@ -89,7 +86,15 @@ def commande(pos, theta, objectif, objectiforientation = "None"):
         phi = alpha + np.pi
         Np = -1*Kp*norm
 
-    deltaTheta = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)-theta
+    if(phi>0.2):
+        Np = 0
+    else:
+        Np = Np*(0.2-phi)
+
+    angle1 = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)
+    angle1 = np.arctan2(sin(angle1),cos(angle1)) #entre 0 et 2pi
+
+    deltaTheta = angle1 - theta
     Ntheta = Ktheta*deltaTheta
 
     Nd = Np + Ntheta
@@ -235,6 +240,10 @@ class Tracking(Node):
             Ngmsg.data=float(Ng)
             Thetamsg.data=float(theta)
 
+            self.get_logger().info("Nd: '%s'" % Nd)
+            self.get_logger().info("Ng: '%s'" % Ng)
+            self.get_logger().info("Phi: '%s'" % Thetamsg)
+            self.get_logger().info("-----------------")
             self.publisherl.publish(Ngmsg)
             self.publisherr.publish(Ndmsg)
             self.publisher_pos_l.publish(Thetamsg)
