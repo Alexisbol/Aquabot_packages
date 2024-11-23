@@ -191,7 +191,8 @@ def diststar(G,r,a,c=0.1):
                 if v not in s:
                     s.append(v)
 
-        s.remove(x)
+        if(x in s):
+            s.remove(x)
         g[x]["vu"]=1
     l=[a]
     pt=0
@@ -443,7 +444,7 @@ def tracegr(g,transpg=0.5,transpa=0.15,col="blue"):
         xs,ys=s
         x.append(xs)
         y.append(ys)
-    #plt.scatter(x, y, c=color)#, s=area, alpha=transpg,linewidths=0.01)
+    plt.scatter(x, y, c=color)#, s=area, alpha=transpg,linewidths=0.01)
     for a in g :
         i+=1
         for b in g[a]["adj"]:
@@ -461,15 +462,16 @@ def ajoutept(g,a,liobs):
     for (c,r) in liobs :
         x,y=c
         gam=angle(c,a)
-        tet=acos(r/dist(c,a))
-        e=(x+r*cos(gam+tet-pi),y+r*sin(gam+tet-pi))
-        f=(x+r*cos(pi+gam-tet),y+r*sin(gam+pi-tet))
-        sommet(g,e,c)
-        sommet(g,f,c)
-        if a!=e and verif(a,e,(a,0),(c,r),liobs):
-            arretedroite(g,a,e)
-        if a!=f and verif(a,f,(a,0),(c,r),liobs):
-            arretedroite(g,a,f)
+        if(r < dist(c,a)):
+            tet=acos(r/dist(c,a))
+            e=(x+r*cos(gam+tet-pi),y+r*sin(gam+tet-pi))
+            f=(x+r*cos(pi+gam-tet),y+r*sin(gam+pi-tet))
+            sommet(g,e,c)
+            sommet(g,f,c)
+            if a!=e and verif(a,e,(a,0),(c,r),liobs):
+                arretedroite(g,a,e)
+            if a!=f and verif(a,f,(a,0),(c,r),liobs):
+                arretedroite(g,a,f)
 
         for s in g :
             d=g[s]
@@ -571,31 +573,30 @@ def pathfinding(a,b,Liobs):
         if(r > dist(c,a)): #si a dans l'obstacle on le 'pousse' au bord
             temp = (a[0]-c[0],a[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+5)/(norm),temp[1]*(r+5)/(norm))
-            a = (int(c[0]+temp[0]),int(c[1]+temp[1]))
+            temp = ((2+r)*temp[0]/(norm),(2+r)*temp[1]/(norm))
+            a = (floor(c[0]+temp[0]),floor(c[1]+temp[1]))
         if(r > dist(c,b)): #si b dans l'obstacle on le 'pousse' au bord
             temp = (b[0]-c[0],b[1]-c[1])
             norm = np.sqrt(temp[0]**2 + temp[1]**2)
-            temp = (temp[0]*(r+5)/norm,temp[1]*(r+5)/norm)
-            b = (int(c[0]+temp[0]),int(c[1]+temp[1]))
+            temp = ((2+r)*temp[0]/norm,(2+r)*temp[1]/norm)
+            b = (floor(c[0]+temp[0]),floor(c[1]+temp[1]))
 
     ajoutept(g,a,Liobs)
     ajoutept(g,b,Liobs)
-    if(verif(a,b,c1,c2,Liobs)):
-        arretedroite(g,a,b)
+
+
+    if(abs(a[0]-b[0])>0.1 and abs(a[1]-b[1])>0.1):
+        if(verif(a,b,c1,c2,Liobs)):
+            arretedroite(g,a,b)
 
     l,p=diststar(g,b,a)
     path0=path(g,l)
     #tracegr(g)
-    
-    #for (x,y) in l :
-    #    plt.plot(x,y,color='r',marker='x')
-    #for (x,y) in path0 :
-    #    plt.plot(x,y,color='g',marker='.')
-    #print(l)
+    #print(path0)
     return(path0)
 
-#pathfinding((-160,-30),(-114,11),Liobs)
+
+#pathfinding((-154,-7),(-67,84),Liobs)
 
 #print(pathfinding((0,0),(200,200),Liobs))
 
@@ -619,4 +620,4 @@ for i in range(len(path)-1):
 
 
 
-#plt.show()
+plt.show()

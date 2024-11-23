@@ -63,6 +63,7 @@ class Mission(Node):
         self.turbinesI = 0
         self.currentgoal = Point()
         self.currentcameragoal = Point()
+        self.point = Point()
 
         self.status = 'INITIALIZED'
 
@@ -101,22 +102,23 @@ class Mission(Node):
             if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
                 self.currentgoal = self.liste_turbines[self.turbinesI]
+
+                vect = Point()
+                vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+                vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+                norm = np.sqrt(vect.x**2 + vect.y**2)
+                vect.x = vect.x/norm
+                vect.y = vect.y/norm
+                self.point.x = self.currentgoal.position.x+vect.x*13
+                self.point.y = self.currentgoal.position.y+vect.y*13
+
                 self.currentcameragoal = self.liste_turbines[self.turbinesI]
                 self.get_logger().info(self.status)
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
 
         if(self.status == 'SEARCH'):
-            vect = Point()
-            vect.x = -1*(self.currentgoal.position.x - self.odom.pose.pose.position.x)
-            vect.y = -1*(self.currentgoal.position.y - self.odom.pose.pose.position.y)
-            norm = np.sqrt(vect.x**2 + vect.y**2)
-            vect.x = vect.x/norm
-            vect.y = vect.y/norm
-            point = Point()
-            point.x = self.currentgoal.position.x+vect.x*1+0.1
-            point.y = self.currentgoal.position.y+vect.y*1
-            self.goal_publishers.publish(point)
+            self.goal_publishers.publish(self.point)
 
             pointcam = Point()
             pointcam.x = self.currentcameragoal.position.x
@@ -134,18 +136,26 @@ class Mission(Node):
                 self.currentgoal = self.liste_turbines[self.turbinesI]
                 self.currentcameragoal = self.currentgoal
 
+                vect = Point()
+                vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+                vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+                norm = np.sqrt(vect.x**2 + vect.y**2)
+                vect.x = vect.x/norm
+                vect.y = vect.y/norm
+                self.point.x = self.currentgoal.position.x-vect.x*13
+                self.point.y = self.currentgoal.position.y-vect.y*13
+
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
-            elif(self.proche_goal(15)): #Arrivé mais pas QR code scanné
+            elif(self.proche_goal(14)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
                 vect = Point()
                 vect.x = (turbine.position.x - self.odom.pose.pose.position.x)
                 vect.y = (turbine.position.y - self.odom.pose.pose.position.y)
-                norm = np.sqrt(vect.x**2 + vect.y**2)
-
-                self.currentgoal.position.x = turbine.position.x + (norm*np.cos(0))
-                self.currentgoal.position.y = turbine.position.y + (norm*np.sin(1))
-
+                self.currentgoal.position.x = turbine.position.x + vect.x
+                self.currentgoal.position.y = turbine.position.y + vect.y
+                self.point.x = self.currentgoal.position.x
+                self.point.y = self.currentgoal.position.y
                 self.get_logger().info('turning around turbine')
 
             if(self.phase == 2):
