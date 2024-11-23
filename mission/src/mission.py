@@ -64,6 +64,7 @@ class Mission(Node):
         self.currentgoal = Point()
         self.currentcameragoal = Point()
         self.point = Point()
+        self.liste_turbines_reste = PoseArray()
 
         self.status = 'INITIALIZED'
 
@@ -87,7 +88,10 @@ class Mission(Node):
 
     def turbinespose_callback(self,msg):
         self.liste_turbines = msg.poses
+        if(not self.turbines_received):
+            self.liste_turbines_reste = self.liste_turbines
         self.turbines_received = True
+
 
     def phase_callback(self,msg):
         self.phase = msg
@@ -97,11 +101,22 @@ class Mission(Node):
             self.qrcode = msg
             self.qrcode_received = True
 
+    def plus_proche_turbine(self):
+        ii = 9
+        min = 99999999
+        for i in range(len(self.liste_turbines_reste)):
+            dist = np.sqrt((self.liste_turbines_reste[i].position.x - self.odom.pose.pose.position.x)**2 + (self.liste_turbines_reste[i].position.y - self.odom.pose.pose.position.y)**2)
+            if(dist<min):
+                min = dist
+                ii = i
+        return ii
+    
     def timer_callback(self):
         if(self.status == 'INITIALIZED'):
             if(self.turbines_received and self.odom_received):
                 self.status = 'SEARCH'
-                self.currentgoal = self.liste_turbines[self.turbinesI]
+                self.turbinesI = self.plus_proche_turbine()
+                self.currentgoal = self.liste_turbines_reste[self.turbinesI]
 
                 vect = Point()
                 vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
@@ -112,7 +127,7 @@ class Mission(Node):
                 self.point.x = self.currentgoal.position.x+vect.x*13
                 self.point.y = self.currentgoal.position.y+vect.y*13
 
-                self.currentcameragoal = self.liste_turbines[self.turbinesI]
+                self.currentcameragoal = self.liste_turbines_reste[self.turbinesI]
                 self.get_logger().info(self.status)
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
@@ -129,26 +144,28 @@ class Mission(Node):
                 self.qrcode_received = False
 
             if(self.qrcode_received): #QR code scanné
-                self.turbinesI+=1
-                self.qr_publishers.publish(self.qrcode)
-                self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
+                self.liste_turbines_reste.pop(self.turbinesI)
+                if(len(self.liste_turbines_reste)>0):
+                    self.turbinesI = self.plus_proche_turbine()
+                    self.qr_publishers.publish(self.qrcode)
+                    self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
                 
-                self.currentgoal = self.liste_turbines[self.turbinesI]
-                self.currentcameragoal = self.currentgoal
+                    self.currentgoal = self.liste_turbines_reste[self.turbinesI]
+                    self.currentcameragoal = self.currentgoal
 
-                vect = Point()
-                vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
-                vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
-                norm = np.sqrt(vect.x**2 + vect.y**2)
-                vect.x = vect.x/norm
-                vect.y = vect.y/norm
-                self.point.x = self.currentgoal.position.x-vect.x*13
-                self.point.y = self.currentgoal.position.y-vect.y*13
+                    vect = Point()
+                    vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+                    vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+                    norm = np.sqrt(vect.x**2 + vect.y**2)
+                    vect.x = vect.x/norm
+                    vect.y = vect.y/norm
+                    self.point.x = self.currentgoal.position.x-vect.x*13
+                    self.point.y = self.currentgoal.position.y-vect.y*13
 
-                self.get_logger().info('going to: "%s"' % self.currentgoal.position)
+                    self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
             elif(self.proche_goal(14)): #Arrivé mais pas QR code scanné
-                turbine = self.liste_turbines[self.turbinesI]
+                turbine = self.liste_turbines_reste[self.turbinesI]
                 vect = Point()
                 vect.x = (turbine.position.x - self.odom.pose.pose.position.x)
                 vect.y = (turbine.position.y - self.odom.pose.pose.position.y)
