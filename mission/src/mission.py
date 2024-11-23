@@ -213,8 +213,7 @@ class Mission(Node):
                     self.liste_turbines_reste.pop(self.turbinesI)
                 if(len(self.liste_turbines_reste)>0):
                     self.turbinesI = self.plus_proche_turbine()
-                    
-                
+
                     self.currentgoal = self.liste_turbines_reste[self.turbinesI]
                     self.currentcameragoal = self.currentgoal
 
