@@ -1,3 +1,7 @@
+# TODO
+- go to the next closest turbine in SEARCH phase
+- change gains depending on distance and angle from the goal 
+
 # Aquabot_packages
 
 Ce repo github a pour but d'héberger les packages contenenant les noeuds ROS2.
