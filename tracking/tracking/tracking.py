@@ -319,7 +319,7 @@ class Tracking(Node):
         thrust_right.data = max(min(base_thrust - angle_correction, MAX_THRUST), -MAX_THRUST)
 
         # Réduction de la poussée si proche de la position cible
-        if abs(distance_error) < POSITION_TOLERANCE:
+        if abs(distance_error) < 3:
             #Peut-être réduire de façon proportionnel à la distance
             thrust_left.data *= 0.5
             thrust_right.data *= 0.5
