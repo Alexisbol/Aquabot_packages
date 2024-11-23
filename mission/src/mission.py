@@ -8,6 +8,8 @@ from nav_msgs.msg import *
 from geometry_msgs.msg import *
 from ros_gz_interfaces.msg import ParamVec
 import numpy as np
+from collections import deque
+
 
 class Mission(Node):
     def __init__(self):
@@ -64,6 +66,14 @@ class Mission(Node):
         self.currentgoal = Point()
         self.currentcameragoal = Point()
 
+        # Initialize deques for sliding windows
+        self.distance_window = deque(maxlen=10)  # For distances
+        self.angle_window = deque(maxlen=3)     # For angles
+
+        # Initialize filter values
+        self.filter_angle = 0.0
+        self.filter_distance = 0.0
+
         self.status = 'INITIALIZED'
 
     def proche_goal(self,dist):
@@ -77,31 +87,58 @@ class Mission(Node):
             return False
     
     def trouver_turbine_la_plus_proche(self):
-        distances_boat_from_goal = []
-        angles_boat_from_goal = []
-        #for i in range(7): # A verifier ça ne fonctionne surement pas, pb de fréquence
-        distances_boat_from_goal.append(self.ping.params[2].value.double_value)
-        angles_boat_from_goal.append(self.ping.params[1].value.double_value)
-        self.get_logger().info('distance = params[2] : "%s"' % self.ping.params[2].value.double_value)
-        self.get_logger().info('angle = params[1]: "%s"' % self.ping.params[1].value.double_value)
-        angle_boat_from_goal = np.median(angles_boat_from_goal)
-        distance_boat_from_goal = np.median(distances_boat_from_goal)
-        self.get_logger().info('distance: "%s"' % distance_boat_from_goal)
-        self.get_logger().info('angle: "%s"' % angle_boat_from_goal)
+        self.get_logger().info('distance = params[2] : "%s"' % self.filter_distance)
+        self.get_logger().info('angle = params[1]: "%s"' % self.filter_angle)
+        self.get_logger().info('distances window: "%s"' % self.distance_window)
+        self.get_logger().info('angles window: "%s"' % self.angle_window)
         yaw = self.odom.pose.pose.orientation.z
         self.get_logger().info('yaw: "%s"' % yaw)
         self.get_logger().info('odom x: "%s"' % self.odom.pose.pose.position.x)
         self.get_logger().info('odom y: "%s"' % self.odom.pose.pose.position.y)
-        goal_eolienne_pos = np.array([self.odom.pose.pose.position.x + distance_boat_from_goal * np.cos(np.pi/2 - angle_boat_from_goal + yaw),
-                                       self.odom.pose.pose.position.y + distance_boat_from_goal * np.sin(np.pi/2 - angle_boat_from_goal + yaw)])
+        goal_eolienne_pos = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(np.pi/2-self.filter_angle-yaw),
+                                       self.odom.pose.pose.position.y + self.filter_distance * np.sin(np.pi/2-self.filter_angle - yaw)])
+        goal_eolienne_pos2 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(np.pi/2-self.filter_angle-yaw),
+                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(np.pi/2-self.filter_angle - yaw)])
+        goal_eolienne_pos3 = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(-self.filter_angle-yaw),
+                                        self.odom.pose.pose.position.y + self.filter_distance * np.sin(-self.filter_angle - yaw)])
+        goal_eolienne_pos4 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(self.filter_angle + yaw),
+                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(self.filter_angle + yaw)])
+        goal_eolienne_pos5 = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(np.pi/2-self.filter_angle+yaw),
+                                       self.odom.pose.pose.position.y + self.filter_distance * np.sin(np.pi/2-self.filter_angle + yaw)])
+        goal_eolienne_pos6 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(np.pi/2-self.filter_angle+yaw),
+                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(np.pi/2-self.filter_angle + yaw)])
+        goal_eolienne_pos7 = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(-self.filter_angle+yaw),
+                                        self.odom.pose.pose.position.y + self.filter_distance * np.sin(-self.filter_angle + yaw)])
+        goal_eolienne_pos8 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(self.filter_angle - yaw),
+                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(self.filter_angle - yaw)])
 
         distances_eoliennes_from_goal = np.array([np.linalg.norm(goal_eolienne_pos - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        distances_eoliennes_from_goal2 = np.array([np.linalg.norm(goal_eolienne_pos2 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        distances_eoliennes_from_goal3 = np.array([np.linalg.norm(goal_eolienne_pos3 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        distances_eoliennes_from_goal4 = np.array([np.linalg.norm(goal_eolienne_pos4 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        distances_eoliennes_from_goal5 = np.array([np.linalg.norm(goal_eolienne_pos5 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        distances_eoliennes_from_goal6 = np.array([np.linalg.norm(goal_eolienne_pos6 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        distances_eoliennes_from_goal7 = np.array([np.linalg.norm(goal_eolienne_pos7 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
+        distances_eoliennes_from_goal8 = np.array([np.linalg.norm(goal_eolienne_pos8 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
         closest_turbine_index = np.argmin(distances_eoliennes_from_goal)
+
         self.get_logger().info('distances_eolienne_from_goal: "%s"' % distances_eoliennes_from_goal)
+        self.get_logger().info('distances_eolienne_from_goal2: "%s"' % distances_eoliennes_from_goal2)
+        self.get_logger().info('distances_eolienne_from_goal3: "%s"' % distances_eoliennes_from_goal3)
+        self.get_logger().info('distances_eolienne_from_goal4: "%s"' % distances_eoliennes_from_goal4)
+        self.get_logger().info('distances_eolienne_from_goal5: "%s"' % distances_eoliennes_from_goal5)
+        self.get_logger().info('distances_eolienne_from_goal6: "%s"' % distances_eoliennes_from_goal6)
+        self.get_logger().info('distances_eolienne_from_goal7: "%s"' % distances_eoliennes_from_goal7)
+        self.get_logger().info('distances_eolienne_from_goal8: "%s"' % distances_eoliennes_from_goal8)
+
         self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
         return closest_turbine_index
 
-
+    def median_filter(self, window):
+        """
+        Apply a median filter to the given sliding window.
+        """
+        return np.median(window)
 
 
     def odom_callback(self,msg):
@@ -111,6 +148,17 @@ class Mission(Node):
     def ping_callback(self,msg):
         self.ping = msg
         self.ping_received = True
+        # Extract values from the message
+        distance = msg.params[2].value.double_value
+        angle = msg.params[1].value.double_value
+
+        # Add new values to sliding windows
+        self.distance_window.append(distance)
+        self.angle_window.append(angle)
+
+        # Filtered values
+        self.filter_distance = self.median_filter(self.distance_window)
+        self.filter_angle = self.median_filter(self.angle_window)
 
     def turbinespose_callback(self,msg):
         self.liste_turbines = msg.poses
@@ -127,7 +175,7 @@ class Mission(Node):
     def timer_callback(self):
         if(self.status == 'INITIALIZED'):
             if(self.turbines_received and self.odom_received):
-                self.get_logger().info('--------------V8------------')
+                self.get_logger().info('--------------V11------------')
                 self.status = 'SEARCH'
                 self.currentgoal = self.liste_turbines[self.turbinesI]
                 self.currentcameragoal = self.currentgoal
@@ -168,12 +216,12 @@ class Mission(Node):
             elif(self.proche_goal(20)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
                 vect = Point()
-                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*0.8
+                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.2
 
-                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*0.8
+                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.2
 
-                self.currentgoal.position.x = (turbine.position.x + vect.x)
-                self.currentgoal.position.y = (turbine.position.y + vect.y)
+                self.currentgoal.position.x = (turbine.position.x + vect.y)
+                self.currentgoal.position.y = (turbine.position.y - vect.x)
 
                 self.get_logger().info('turning around turbine')
 
@@ -188,8 +236,7 @@ class Mission(Node):
                 self.currentgoal = self.liste_turbines[self.turbinesI]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
-                self.status = 'SEARCH' #retour à la recherche à modifier car après le scan on passe à la stabilisation
-            
+
             point = Point()
             point.x = self.currentgoal.position.x + 0.1
             point.y = self.currentgoal.position.y
@@ -212,17 +259,18 @@ class Mission(Node):
             elif(self.proche_goal(20)): #Arrivé mais pas QR code scanné
                 turbine = self.liste_turbines[self.turbinesI]
                 vect = Point()
-                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.0
+                vect.x = (turbine.position.x - self.odom.pose.pose.position.x)*1.2
 
-                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.0
+                vect.y = (turbine.position.y - self.odom.pose.pose.position.y)*1.2
 
-                self.currentgoal.position.x = (turbine.position.x + vect.x)
-                self.currentgoal.position.y = (turbine.position.y + vect.y)
+                self.currentgoal.position.x = (turbine.position.x + vect.y)
+                self.currentgoal.position.y = (turbine.position.y - vect.x)
 
-                self.get_logger().info('turning around turbine')
+                #self.get_logger().info('turning around turbine')
 
             
         if(self.status=='STABILIZE'):
+            self.get_logger().info('self.phase : "%s"' % self.phase)
             self.get_logger().info('stabilizing')
             
                 
