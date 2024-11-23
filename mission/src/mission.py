@@ -148,7 +148,7 @@ class Mission(Node):
                 ii = i
         return ii
     
-    def phase2_la_plus_proche2(self):
+    def phase2_la_plus_proche(self):
         #self.get_logger().info('distance = params[2] : "%s"' % self.filter_distance)
         self.get_logger().info('distances window: "%s"' % self.distance_window)
         yaw = self.odom.pose.pose.orientation.z
@@ -162,54 +162,6 @@ class Mission(Node):
         self.get_logger().info('distances_eolienne_from_bateau: "%s"' % distances_eoliennes_from_bateau)
 
         closest_turbine_index = np.argmin(distances_eoliennes_from_bateau-self.filter_distance)
-        self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
-        return closest_turbine_index
-    
-    def phase2_la_plus_proche(self):
-        self.get_logger().info('distance = params[2] : "%s"' % self.filter_distance)
-        self.get_logger().info('angle = params[1]: "%s"' % self.filter_angle)
-        self.get_logger().info('distances window: "%s"' % self.distance_window)
-        self.get_logger().info('angles window: "%s"' % self.angle_window)
-        yaw = self.odom.pose.pose.orientation.z
-        self.get_logger().info('yaw: "%s"' % yaw)
-        self.get_logger().info('odom x: "%s"' % self.odom.pose.pose.position.x)
-        self.get_logger().info('odom y: "%s"' % self.odom.pose.pose.position.y)
-        goal_eolienne_pos = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(np.pi/2-self.filter_angle-yaw),
-                                       self.odom.pose.pose.position.y + self.filter_distance * np.sin(np.pi/2-self.filter_angle - yaw)])
-        goal_eolienne_pos2 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(np.pi/2-self.filter_angle-yaw),
-                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(np.pi/2-self.filter_angle - yaw)])
-        goal_eolienne_pos3 = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(-self.filter_angle-yaw),
-                                        self.odom.pose.pose.position.y + self.filter_distance * np.sin(-self.filter_angle - yaw)])
-        goal_eolienne_pos4 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(self.filter_angle + yaw),
-                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(self.filter_angle + yaw)])
-        goal_eolienne_pos5 = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(np.pi/2-self.filter_angle+yaw),
-                                       self.odom.pose.pose.position.y + self.filter_distance * np.sin(np.pi/2-self.filter_angle + yaw)])
-        goal_eolienne_pos6 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(np.pi/2-self.filter_angle+yaw),
-                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(np.pi/2-self.filter_angle + yaw)])
-        goal_eolienne_pos7 = np.array([self.odom.pose.pose.position.x + self.filter_distance * np.cos(-self.filter_angle+yaw),
-                                        self.odom.pose.pose.position.y + self.filter_distance * np.sin(-self.filter_angle + yaw)])
-        goal_eolienne_pos8 = np.array([self.odom.pose.pose.position.x - self.filter_distance * np.cos(self.filter_angle - yaw),
-                                        self.odom.pose.pose.position.y - self.filter_distance * np.sin(self.filter_angle - yaw)])
-
-        distances_eoliennes_from_goal = np.array([np.linalg.norm(goal_eolienne_pos - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        distances_eoliennes_from_goal2 = np.array([np.linalg.norm(goal_eolienne_pos2 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        distances_eoliennes_from_goal3 = np.array([np.linalg.norm(goal_eolienne_pos3 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        distances_eoliennes_from_goal4 = np.array([np.linalg.norm(goal_eolienne_pos4 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        distances_eoliennes_from_goal5 = np.array([np.linalg.norm(goal_eolienne_pos5 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        distances_eoliennes_from_goal6 = np.array([np.linalg.norm(goal_eolienne_pos6 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        distances_eoliennes_from_goal7 = np.array([np.linalg.norm(goal_eolienne_pos7 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        distances_eoliennes_from_goal8 = np.array([np.linalg.norm(goal_eolienne_pos8 - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
-        closest_turbine_index = np.argmin(distances_eoliennes_from_goal)
-
-        self.get_logger().info('distances_eolienne_from_goal: "%s"' % distances_eoliennes_from_goal)
-        self.get_logger().info('distances_eolienne_from_goal2: "%s"' % distances_eoliennes_from_goal2)
-        self.get_logger().info('distances_eolienne_from_goal3: "%s"' % distances_eoliennes_from_goal3)
-        self.get_logger().info('distances_eolienne_from_goal4: "%s"' % distances_eoliennes_from_goal4)
-        self.get_logger().info('distances_eolienne_from_goal5: "%s"' % distances_eoliennes_from_goal5)
-        self.get_logger().info('distances_eolienne_from_goal6: "%s"' % distances_eoliennes_from_goal6)
-        self.get_logger().info('distances_eolienne_from_goal7: "%s"' % distances_eoliennes_from_goal7)
-        self.get_logger().info('distances_eolienne_from_goal8: "%s"' % distances_eoliennes_from_goal8)
-
         self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
         return closest_turbine_index
 
@@ -300,7 +252,7 @@ class Mission(Node):
         if(self.status == 'RALLY'):
             self.get_logger().info('phase = "%s"'% self.phase)
             if self.turbinesI == -1:
-                self.turbine_phase_2 = self.phase2_la_plus_proche2()
+                self.turbine_phase_2 = self.phase2_la_plus_proche()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('going to: "%s"' % self.currentgoal.position)
@@ -315,8 +267,8 @@ class Mission(Node):
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
-            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche2()):
-                self.turbine_phase_2 = self.phase2_la_plus_proche2()
+            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche()):
+                self.turbine_phase_2 = self.phase2_la_plus_proche()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
