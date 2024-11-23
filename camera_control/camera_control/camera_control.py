@@ -34,7 +34,7 @@ class CameraControl(Node):
             Odometry,
             '/aquabot/odom',
             self.odom_callback,
-            10)
+            30)
             
         self.subscription = self.create_subscription(
             Point,
