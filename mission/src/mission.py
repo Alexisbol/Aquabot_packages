@@ -278,7 +278,7 @@ class Mission(Node):
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
             
-            elif (self.proche_goal(35)):
+            elif (self.proche_goal(40)):
                 self.status = 'STABILISATION'
                 self.commande_type.data = 2  
                 self.commande_type_publishers.publish(self.commande_type) #commande de type 2 pour la phase 2
