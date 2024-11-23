@@ -94,7 +94,7 @@ class Mission(Node):
 
 
     def phase_callback(self,msg):
-        self.phase = msg
+        self.phase = msg.data
 
     def qrcode_callback(self,msg):
         if(msg.data != 'null'):
