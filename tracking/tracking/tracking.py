@@ -62,7 +62,6 @@ k_theta = 13  # Constante pour l'orientation
 k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-'''
 def commande(pos, theta, v_actual, omega_actual, objectif):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
     x_target, y_target=objectif
@@ -88,59 +87,7 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     V_gauche = k_v * delta_v + k_omega * delta_omega
     V_droite = k_v * delta_v - k_omega * delta_omega
     
-    return V_gauche, V_droite, angle_error,delta_v,delta_omega,theta
-'''
-
-def commande(pos, theta, v_actual, omega_actual, objectif):
-    x_target, y_target = objectif
-    x, y = pos
-    
-    # Calcul de la distance et de l'angle vers la cible
-    distance_target = sqrt((x_target - x)**2 + (y_target - y)**2)
-    theta_target = atan2(y_target - y, x_target - x)
-    
-    # Calcul de l'erreur d'angle
-    angle_error = theta_target - theta
-    angle_error = atan2(sin(angle_error), cos(angle_error))
-    
-    # Ajuster les gains en fonction de l'angle d'erreur
-    k_d_dynamic = k_d
-    k_v_dynamic = k_v
-    
-    # Si on est presque en ligne droite (angle faible)
-    if abs(angle_error) < 0.1:  # environ 5.7 degrés
-        k_d_dynamic = k_d * 5.0  # Augmente la vitesse en ligne droite
-        k_v_dynamic = k_v * 5.0
-    elif abs(angle_error) < 0.2:  # environ 11.4 degrés
-        k_d_dynamic = k_d * 3.0  # Vitesse intermédiaire
-        k_v_dynamic = k_v * 3.0
-    else:
-        # Réduire la vitesse pour les manœuvres serrées
-        k_d_dynamic = k_d * 0.8
-        k_v_dynamic = k_v * 0.8
-    
-    # Ajuster aussi en fonction de la distance à l'objectif
-    if distance_target < 5.0:  # Ralentir à l'approche de l'objectif
-        k_d_dynamic *= (distance_target / 5.0)
-    
-    # Définir la vitesse linéaire et angulaire désirée
-    v_desired = k_d_dynamic * distance_target
-    omega_desired = k_theta * angle_error
-    
-    # Calcul des erreurs de vitesse
-    delta_v = v_desired - norme(v_actual)
-    delta_omega = omega_desired - omega_actual
-    
-    # Calculer les commandes pour chaque moteur
-    V_gauche = k_v_dynamic * delta_v + k_omega * delta_omega
-    V_droite = k_v_dynamic * delta_v - k_omega * delta_omega
-    
-    # Limiter les vitesses maximum
-    max_speed = 1000.0  # Ajuster selon les capacités du bateau
-    V_gauche = max(min(V_gauche, max_speed), -max_speed)
-    V_droite = max(min(V_droite, max_speed), -max_speed)
-    
-    return V_gauche, V_droite, angle_error, delta_v, delta_omega, theta
+    return V_gauche, V_droite,angle_error,delta_v,delta_omega,theta
 
 class Tracking(Node):
     def __init__(self):
@@ -322,6 +269,27 @@ class Tracking(Node):
         #self.publisher_pos_r.publish(msg)
         #self.publisherl.publish(500)
         #self.publisherl.publish(500)
+
+    def stabiliser_position(self):
+
+        #Calcul erreur position
+
+
+        #Calcul angle désiré 
+
+
+        #Position des moteurs 
+
+
+        #Ajustement angle moteur 
+
+
+        #Publication position moteurs
+
+        #Poussée 
+
+
+
 
 
 def main():
