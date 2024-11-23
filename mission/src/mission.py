@@ -50,7 +50,7 @@ class Mission(Node):
         self.camera_publishers = self.create_publisher(Point,'/aquabot/camera_look_at',10)
         self.qr_publishers = self.create_publisher(String,'/vrx/windturbinesinspection/windturbine_checkup',10)
 
-        self.timer = self.create_timer(0.5, self.timer_callback)
+        self.timer = self.create_timer(1, self.timer_callback)
 
         self.odom = Odometry()
         self.odom_received = False
@@ -145,7 +145,8 @@ class Mission(Node):
 
             if(self.qrcode_received): #QR code scanné
                 self.qr_publishers.publish(self.qrcode)
-                self.liste_turbines_reste.pop(self.turbinesI)
+                if(len(self.liste_turbines_reste)>0):
+                    self.liste_turbines_reste.pop(self.turbinesI)
                 if(len(self.liste_turbines_reste)>0):
                     self.turbinesI = self.plus_proche_turbine()
                     self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
