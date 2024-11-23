@@ -321,25 +321,27 @@ class Mission(Node):
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
 
-            if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
-                self.qrcode_received = False
-
-            if(self.qrcode_received): #QR code scanné
-                #utiliser la commande de stabilisation
-                self.get_logger().info('----------------------------------')
-                self.get_logger().info('angle qr code "%s"' % self.qr_angle)
-
-
-            elif(self.proche_goal(13)): #Arrivé mais pas QR code scanné
-                vect = Point()
-                vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
-                vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
-                self.point.x = self.currentgoal.position.x + vect.x
-                self.point.y = self.currentgoal.position.y + vect.y
-                self.get_logger().info('turning around turbine')
-
-            #if(self.proche_goal(15)):
-                #utiliser la commande de stabilisation
+            #if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
+            #    self.qrcode_received = False
+#
+            #if(self.qrcode_received): #QR code scanné
+            #    #utiliser la commande de stabilisation
+            #    self.get_logger().info('----------------------------------')
+            #    self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
+            #    self.phase = 'STABILISATION'
+#
+#
+            #elif(self.proche_goal(13)): #Arrivé mais pas QR code scanné
+            #    vect = Point()
+            #    vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+            #    vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+            #    self.point.x = self.currentgoal.position.x + vect.x
+            #    self.point.y = self.currentgoal.position.y + vect.y
+            #    self.get_logger().info('turning around turbine')
+#
+        #if(s#elf.status == 'STABILISATION'):
+            #self.get_logger().info('------------STABILISATION--------------')
+            #self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
                 
 
             
