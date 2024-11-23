@@ -4,7 +4,7 @@ from simple_launch import SimpleLauncher
 def generate_launch_description():
 
     sl = SimpleLauncher(use_sim_time=True)
-    sl.declare_arg('rviz', False)
+    sl.declare_arg('rviz', True)
     sl.declare_arg('unify',True)
 
     with sl.group(if_arg = 'rviz'):

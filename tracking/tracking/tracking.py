@@ -159,8 +159,15 @@ class Tracking(Node):
             response = future.result()
             path = [(point.x, point.y) for point in response.path.points]
             pathfixed = Pathfixed()
+            # Add header to each pose
+            pathfixed.header.frame_id = "world"
+            pathfixed.header.stamp = self.get_clock().now().to_msg()
             for point in response.path.points:
                 posefixed = PoseStamped()
+                # Add header to each pose
+                posefixed.header.frame_id = "world"
+                posefixed.header.stamp = self.get_clock().now().to_msg()
+            
                 posefixed.pose.position.x = point.x
                 posefixed.pose.position.y = point.y
                 posefixed.pose.position.z = 0.0
