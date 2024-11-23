@@ -34,7 +34,7 @@ class Mission(Node):
 
         self.phase_subscription = self.create_subscription(
             UInt32,
-            '/vrx/windturbineinspection/current_phase',
+            '/vrx/windturbinesinspection/current_phase',
             self.phase_callback,
             10
         )
@@ -145,12 +145,12 @@ class Mission(Node):
 
             if(self.qrcode_received): #QR code scanné
                 self.qr_publishers.publish(self.qrcode)
+                self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
+
                 if(len(self.liste_turbines_reste)>0):
                     self.liste_turbines_reste.pop(self.turbinesI)
                 if(len(self.liste_turbines_reste)>0):
                     self.turbinesI = self.plus_proche_turbine()
-                    self.get_logger().info('qr code scanned: "%s"' % self.qrcode.data)
-                
                     self.currentgoal = self.liste_turbines_reste[self.turbinesI]
                     self.currentcameragoal = self.currentgoal
 
