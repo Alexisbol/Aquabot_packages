@@ -272,26 +272,38 @@ class Tracking(Node):
 
     def stabiliser_position(self):
 
+        distance_voulue = 10.0
+
         #Calcul erreur position
+        err_x = self.turbine_pos_x - self.posbateau[0]
+        err_y = self.tubine_pos_y - self.posbateau[1]
 
-
+        distance_réelle = sqrt(err_x**2 + err_y**2)
+        
         #Calcul angle désiré 
-
-
-        #Position des moteurs 
-
+        angle_voulu = atan2(dy, dx)
+        err_angle = angle_voulu - self.yaw
+        err_angle = atan2(sin(err_angle)), cos(err_angle))
+        
+        msg_pos_left = FLoat64()
+        msg_pos_right = FLoat64()
 
         #Ajustement angle moteur 
-
+        if(abs(err_angle) > 0.1): #Si grosse erreur
+            motor_angle = max(min(angle_error, pi/4), -pi/4) #ON limite entre -pi/4 et pi/4
+            msg_pos_left.data = motor_angle
+            msg_pos_right.data = -motor_angle  # Inverse pour tourner
+        else:
+            msg_pos_l.data = 0.0
+            msg_pos_r.data = 0.0
 
         #Publication position moteurs
+        self.publisher_pos_l.publish(msg_pos_l)
+        self.publisher_pos_r.publish(msg_pos_r)
 
         #Poussée 
 
-
-
-
-
+    
 def main():
     rclpy.init()
 
