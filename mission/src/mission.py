@@ -58,6 +58,8 @@ class Mission(Node):
         self.camera_publishers = self.create_publisher(Point,'/aquabot/camera_look_at',10)
         self.qr_publishers = self.create_publisher(String,'/vrx/windturbinesinspection/windturbine_checkup',10)
 
+        self.commande_type_publishers = self.create_publisher(UInt32,'/aquabot/commande_type',10)
+
         self.timer = self.create_timer(1, self.timer_callback)
 
         self.previouspahse = 0
@@ -89,6 +91,10 @@ class Mission(Node):
         self.turbine_phase_2 = 0
 
         self.status = 'INITIALIZED'
+
+        self.commande_type = UInt32()
+        self.commande_type.data = 1
+        self.commande_type_publishers.publish(self.commande_type)# initialisation : commande de type 1 pour la phase 1
 
     def proche_goal(self,dist):
         x = self.odom.pose.pose.position.x
@@ -271,6 +277,11 @@ class Mission(Node):
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
+            
+            elif (self.proche_goal(35)):
+                self.status = 'STABILISATION'
+                self.commande_type.data = 2  
+                self.commande_type_publishers.publish(self.commande_type) #commande de type 2 pour la phase 2
 
             #if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
             #    self.qrcode_received = False
