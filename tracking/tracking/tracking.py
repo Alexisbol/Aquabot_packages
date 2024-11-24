@@ -68,24 +68,25 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     # Calcul de la distance et de l'angle vers la cible
     distance_target = sqrt((x_target - x)**2 + (y_target - y)**2)
     theta_target = atan2(y_target - y, x_target - x)
-
+    
     # Calcul de l'erreur d'angle
     angle_error = theta_target - theta
     # Normaliser l'angle dans l'intervalle [-pi, pi]
     angle_error = atan2(sin(angle_error),cos(angle_error))
-
+    
     # Définir la vitesse linéaire et angulaire désirée
-    v_desired = k_d * distance_target
+    v_desired = k_d * ((1/(0.0002+sqrt(angle_error**2)))+ distance_target)
     omega_desired = k_theta * angle_error
-
+    
     # Calcul des erreurs de vitesse linéaire et angulaire
     delta_v = v_desired - norme(v_actual)
+    norme_delta_v = sqrt(delta_v**2)
     delta_omega = omega_desired - omega_actual
-
+    
     # Calculer les commandes pour chaque moteur en compensant les erreurs
     V_gauche = k_v * delta_v + k_omega * delta_omega
     V_droite = k_v * delta_v - k_omega * delta_omega
-
+    
     return V_gauche, V_droite,angle_error,delta_v,delta_omega,theta
 
 class Tracking(Node):
@@ -156,6 +157,20 @@ class Tracking(Node):
             10
         )
 
+        self.commande_type_subscription = self.create_subscription(
+            Float64,
+            '/aquabot/flitered_distance',
+            self.flitered_distance_callback,
+            10
+        )
+
+        self.commande_type_subscription = self.create_subscription(
+            Float64,
+            '/aquabot/flitered_angle',
+            self.flitered_angle_callback,
+            10
+        )
+
         self.publisherl = self.create_publisher(Float64,'/aquabot/thrusters/left/thrust',10)
         self.timer=self.create_timer(0.5,self.commandel_callback)
         self.publisherr = self.create_publisher(Float64,'/aquabot/thrusters/right/thrust',10)
@@ -170,6 +185,12 @@ class Tracking(Node):
 
         self.qr_angle = Float64()
         self.qr_angle.data = 10.0
+
+        self.flitered_distance = Float64()
+        self.flitered_distance.data = 0.0
+
+        self.flitered_angle = Float64()
+        self.flitered_angle.data = 0.0
 
         self.odom_received = False
         self.goal_received = False
@@ -212,6 +233,12 @@ class Tracking(Node):
     
     def commande_type_callback(self,msg):
         self.commande_type = msg
+
+    def flitered_distance_callback(self,msg):
+        self.flitered_distance = msg
+
+    def flitered_angle_callback(self,msg):
+        self.flitered_angle = msg
     
     def qrcode_angle_callback(self,msg):
         self.qr_angle = msg
@@ -290,6 +317,8 @@ class Tracking(Node):
             #self.get_logger().info('deltaomega: "%s"' % somme)
 
     def stabiliser_position(self):
+        err_angle2 = self.flitered_angle.data
+        distance_réelle2 = self.flitered_distance.data
         if  self.commande_type.data ==2:
             distance_voulue = 10.0
             
@@ -300,16 +329,38 @@ class Tracking(Node):
             distance_réelle = sqrt(err_x**2 + err_y**2)
             
             #Calcul angle désiré 
-            angle_voulu = atan2(err_x, err_y)
-            err_angle = - self.qr_angle.data
+            angle_voulu = atan2(err_y, err_x)
+            err_angle = angle_voulu - self.yaw
             #err_angle = angle_voulu - self.yaw
             err_angle = atan2(sin(err_angle), cos(err_angle))
+
+            # Ajouter la correction pour s'aligner avec le QR code
+            qr_orientation_correction = -self.qr_angle.data  # Angle relatif du QR code
+            err_angle += qr_orientation_correction
+            err_angle = atan2(sin(err_angle), cos(err_angle))  # Normaliser à nouveau
             
+            # Calcul de l'erreur de position
+            err_x = self.goal[0] - self.posbateau[0]
+            err_y = self.goal[1] - self.posbateau[1]
+
+            distance_réelle = sqrt(err_x**2 + err_y**2)
+
+            # Orientation globale basée sur le QR code
+            # Ajout de l'orientation du bateau pour obtenir l'angle global
+            angle_qrcode_global = self.qr_angle.data + self.yaw
+
+            # Angle pour aller vers la position cible
+            angle_voulu = atan2(err_y, err_x)
+
+            # Calcul de l'erreur d'angle globale
+            err_angle = angle_qrcode_global - self.yaw  # Angle cible moins orientation actuelle
+            err_angle = atan2(sin(err_angle), cos(err_angle))  # Normalisation de l'angle
+
             msg_pos_left = Float64()
             msg_pos_right = Float64()
 
             #Ajustement angle moteur 
-            if(abs(err_angle) > 0.1): #Si grosse erreur
+            if(abs(err_angle) > 0.05): #Si grosse erreur
                 motor_angle = max(min(err_angle, pi/4), -pi/4) #ON limite entre -pi/4 et pi/4
                 msg_pos_left.data = motor_angle
                 msg_pos_right.data = -motor_angle  # Inverse pour tourner
@@ -329,8 +380,8 @@ class Tracking(Node):
             distance_error = distance_réelle - distance_voulue
 
             # Gains de contrôle
-            K_p_distance = 50  # Gain proportionnel pour la distance
-            K_p_angle = 200   # Gain proportionnel pour l'angle
+            K_p_distance = 20 # Gain proportionnel pour la distance
+            K_p_angle = 10   # Gain proportionnel pour l'angle
 
             base_thrust = K_p_distance * distance_error
             angle_correction = K_p_angle * err_angle
