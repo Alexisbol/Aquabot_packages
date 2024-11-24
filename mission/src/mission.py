@@ -296,7 +296,7 @@ class Mission(Node):
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
-            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche() and not self.proche_goal(25)):
+            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche()):
                 self.turbine_phase_2 = self.phase2_la_plus_proche()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
@@ -353,6 +353,13 @@ class Mission(Node):
             self.point_ref.y = self.currentgoal.position.y
             self.point_stabilisation_publishers.publish(self.point_ref)
             self.goal_publishers.publish(self.point)
+            if (self.phase == 4):
+                self.status = 'BONUS'
+                self.get_logger().info('self.phase : "%s"' % self.phase)
+
+        if(self.status == 'BONUS'):
+            self.get_logger().info('self.phase : "%s"' % self.phase)
+
 
 
                 
