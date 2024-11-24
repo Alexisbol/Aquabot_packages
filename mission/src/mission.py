@@ -176,7 +176,7 @@ class Mission(Node):
         distances_eoliennes_from_bateau = np.array([np.linalg.norm(pos_bateau - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
 
         self.get_logger().info('distances_eolienne_from_bateau: "%s"' % distances_eoliennes_from_bateau)
-        
+
         distances_goal_from_bateau = distances_eoliennes_from_bateau-self.filter_distance.data
 
         self.get_logger().info('distances_goal_from_bateau: "%s"' % distances_goal_from_bateau)
@@ -286,38 +286,34 @@ class Mission(Node):
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
-            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche()):
+            if (self.proche_goal(30) and self.turbine_phase_2 != self.phase2_la_plus_proche()):
                 self.turbine_phase_2 = self.phase2_la_plus_proche()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
-            
-            elif (self.proche_goal(40)):
-                self.status = 'STABILISATION'
+
+            if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
+                self.qrcode_received = False
+
+            if(self.qrcode_received): #QR code scanné
+                #utiliser la commande de stabilisation
+                self.get_logger().info('----------------------------------')
+                self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
+                self.phase = 'STABILISATION'
                 self.commande_type.data = 2  
                 self.commande_type_publishers.publish(self.commande_type) #commande de type 2 pour la phase 2
 
-            #if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
-            #    self.qrcode_received = False
+            elif(self.proche_goal(13)): #Arrivé mais pas QR code scanné
+                vect = Point()
+                vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+                vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+                self.point.x = self.currentgoal.position.x + vect.x
+                self.point.y = self.currentgoal.position.y + vect.y
+                self.get_logger().info('turning around turbine')
 #
-            #if(self.qrcode_received): #QR code scanné
-            #    #utiliser la commande de stabilisation
-            #    self.get_logger().info('----------------------------------')
-            #    self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
-            #    self.phase = 'STABILISATION'
-#
-#
-            #elif(self.proche_goal(13)): #Arrivé mais pas QR code scanné
-            #    vect = Point()
-            #    vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
-            #    vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
-            #    self.point.x = self.currentgoal.position.x + vect.x
-            #    self.point.y = self.currentgoal.position.y + vect.y
-            #    self.get_logger().info('turning around turbine')
-#
-        #if(s#elf.status == 'STABILISATION'):
-            #self.get_logger().info('------------STABILISATION--------------')
-            #self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
+        if(self.status == 'STABILISATION'):
+            self.get_logger().info('------------STABILISATION--------------')
+            self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
                 
 
             
