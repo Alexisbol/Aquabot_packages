@@ -62,7 +62,7 @@ k_theta = 13  # Constante pour l'orientation
 k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-Kp = 120
+Kp = 250
 Ktheta = 250
 
 def commande(pos, theta, objectif, objectiforientation = "None"):
