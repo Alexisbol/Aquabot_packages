@@ -57,10 +57,10 @@ def norme(v):
     return dist(v,(0,0))
 
 # Constantes de proportionnalité
-k_d = 0.5    # Constante pour la distance
-k_theta = 25  # Constante pour l'orientation
+k_d = 0.5   # Constante pour la distance
+k_theta = 20  # Constante pour l'orientation
 k_v = 200   # Constante pour ajuster la puissance du moteur linéaire
-k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
+k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
 
 def commande(pos, theta, v_actual, omega_actual, objectif):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
@@ -72,6 +72,7 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     
     # Calcul de l'erreur d'angle
     angle_error = theta_target - theta
+    norme_angle_error = sqrt(angle_error**2)
     # Normaliser l'angle dans l'intervalle [-pi, pi]
     angle_error = atan2(sin(angle_error),cos(angle_error))
     
@@ -81,7 +82,6 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     
     # Calcul des erreurs de vitesse linéaire et angulaire
     delta_v = v_desired - norme(v_actual)
-    norme_delta_v = sqrt(delta_v**2)
     delta_omega = omega_desired - omega_actual
     
     # Calculer les commandes pour chaque moteur en compensant les erreurs
@@ -144,8 +144,6 @@ class Tracking(Node):
 
         self.publisher_pos_l = self.create_publisher(Float64,'/aquabot/thrusters/left/pos',10)
         self.publisher_pos_r = self.create_publisher(Float64,'/aquabot/thrusters/right/pos',10)
-        self.timer=self.create_timer(0.5,self.commande_pos_callback)
-
 
         self.odom_received = False
         self.goal_received = False
@@ -226,7 +224,7 @@ class Tracking(Node):
             msg=Float64()
             #self.get_logger().info('Path: "%s"' % self.path)
             (right_Thrust,lt,theta,somme,diff,yaw)= commande(self.posbateau,self.yaw,self.vbateau,self.wbateau,plusproche(self.posbateau,self.path))
-            #self.get_logger().info('accel gauche: "%s"' % lt)
+            #self.get_logger().info('angle_error: "%s"' % theta)
 
             msg.data=float(lt)
             self.publisherl.publish(msg)
@@ -253,22 +251,6 @@ class Tracking(Node):
 
             #self.get_logger().info('deltav: "%s"' % diff)
             #self.get_logger().info('deltaomega: "%s"' % somme)
-    def commande_pos_callback(self):
-        msg=Float64()
-        #angle_objectif = 0 # self.ping_subscription.params[1]
-        #current_angle = self.yaw
-        #if angle_objectif - current_angle > np.pi/16: #environ 10 degre
-        #    #TODO tourner à gauche
-        #    msg.data = np.pi/4
-        #if angle_objectif - current_angle < -np.pi/16: 
-        #    #TODO tourner à droite
-        #    msg.data= - np.pi/4
-        #else :
-        #    self.get_logger().info('diff angle: "%s"' % angle_objectif - current_angle)
-        #self.publisher_pos_l.publish(msg)
-        #self.publisher_pos_r.publish(msg)
-        #self.publisherl.publish(500)
-        #self.publisherl.publish(500)
 
 
 
