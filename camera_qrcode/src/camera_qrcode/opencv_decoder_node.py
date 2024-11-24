@@ -96,6 +96,8 @@ class OpenCvDecoder(Node):
                     #self.get_logger().info(f'Distance: {np.linalg.norm(tvec[0:2])}')
                     #self.get_logger().info(f'Angle: {np.arctan2(tvec[0], tvec[2])*180/np.pi}') #angle en degré
                     angle.data = float(np.arctan2(tvec[0], tvec[2])) #angle en radian
+                    self.publisher_angle.publish(angle)
+                    self.get_logger().info('qr code angle: "%s"' % angle.data)
 
         else:
             msg.data = 'null'
