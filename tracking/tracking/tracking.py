@@ -51,7 +51,7 @@ def plusproche(pos,path):
         if d<dist_min :
             dist_min=d
             im=i+1
-    return path[min(len(path)-1,im+10)]
+    return path[min(len(path)-1,im+3)]
 
 def norme(v):
     return dist(v,(0,0))
@@ -62,10 +62,11 @@ k_theta = 13  # Constante pour l'orientation
 k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-Kp = 250
-Ktheta = 250
+Kp = 70
+Ktheta = 1500
+Mtheta = 350
 
-def commande(pos, theta, objectif, objectiforientation = "None"):
+def commande(pos, theta, objectif, v, objectiforientation = "None"):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
     x_target, y_target=objectif
     x,y=pos
@@ -78,7 +79,7 @@ def commande(pos, theta, objectif, objectiforientation = "None"):
     norm = np.sqrt(deltaX**2 + deltaY**2)
 
     alpha = np.arctan2(deltaY, deltaX) - theta
-
+    
     if(abs(alpha)<np.pi/4):
         phi = alpha
         Np = Kp*norm
@@ -86,19 +87,30 @@ def commande(pos, theta, objectif, objectiforientation = "None"):
         phi = alpha + np.pi
         Np = -1*Kp*norm
 
-    if(phi>0.2):
-        Np = 0
-    else:
-        Np = Np*(0.2-phi)
+    if(phi > np.pi):
+        phi-=np.pi
+    elif(phi < -np.pi):
+        phi+=np.pi
 
     angle1 = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)
-    angle1 = np.arctan2(sin(angle1),cos(angle1)) #entre 0 et 2pi
+    if(angle1 > np.pi):
+        angle1-=np.pi
+    elif(angle1 < -np.pi):
+        angle1+=np.pi
 
     deltaTheta = angle1 - theta
-    Ntheta = Ktheta*deltaTheta
+    Ntheta = Ktheta*deltaTheta #*(Np/abs(Np))
+
+    if(Ntheta > Mtheta):
+        Ntheta = Mtheta
+    elif(Ntheta < -Mtheta):
+        Ntheta = -Mtheta
+
+    Np = Np*np.exp(-4*abs(phi))
 
     Nd = Np + Ntheta
     Ng = Np - Ntheta
+    
     return Nd,Ng,phi
 
 class Tracking(Node):
@@ -234,7 +246,7 @@ class Tracking(Node):
             Ndmsg=Float64()
             Ngmsg=Float64()
             Thetamsg=Float64()
-            (Nd,Ng,theta)= commande(self.posbateau,self.yaw,plusproche(self.posbateau,self.path))
+            (Nd,Ng,theta)= commande(self.posbateau,self.yaw,plusproche(self.posbateau,self.path),self.vbateau)
 
             Ndmsg.data=float(Nd)
             Ngmsg.data=float(Ng)
@@ -242,8 +254,9 @@ class Tracking(Node):
 
             self.get_logger().info("Nd: '%s'" % Nd)
             self.get_logger().info("Ng: '%s'" % Ng)
-            self.get_logger().info("Phi: '%s'" % Thetamsg)
+            self.get_logger().info("Phi: '%s'" % theta)
             self.get_logger().info("-----------------")
+
             self.publisherl.publish(Ngmsg)
             self.publisherr.publish(Ndmsg)
             self.publisher_pos_l.publish(Thetamsg)
