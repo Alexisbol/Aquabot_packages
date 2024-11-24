@@ -56,10 +56,10 @@ def norme(v):
     return dist(v,(0,0))
 
 # Constantes de proportionnalité
-k_d = 0.5   # Constante pour la distance
-k_theta = 20  # Constante pour l'orientation
-k_v = 200   # Constante pour ajuster la puissance du moteur linéaire
-k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
+k_d = 12    # Constante pour la distance
+k_theta = 13  # Constante pour l'orientation
+k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
+k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
 def commande(pos, theta, v_actual, omega_actual, objectif):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
@@ -76,7 +76,7 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     angle_error = atan2(sin(angle_error),cos(angle_error))
     
     # Définir la vitesse linéaire et angulaire désirée
-    v_desired = k_d * ((1/(0.0002+sqrt(angle_error**2)))+ distance_target)
+    v_desired = k_d * distance_target # ((1/(0.005+sqrt(angle_error**2)))+ distance_target)
     omega_desired = k_theta * angle_error
     
     # Calcul des erreurs de vitesse linéaire et angulaire
@@ -305,7 +305,6 @@ class Tracking(Node):
             self.publisherr.publish(msg)
 
             #self.get_logger().info('accel droit: "%s"' % msg.data)
-
             #self.get_logger().info(f"objectif :{self.objectif}" ) 
             #self.get_logger().info(f"pos:{self.posbateau}")
             self.objectif=plusproche(self.posbateau,self.path)
@@ -318,83 +317,49 @@ class Tracking(Node):
             #self.get_logger().info('deltaomega: "%s"' % somme)
 
     def stabiliser_position(self):
-        err_angle2 = self.flitered_angle.data
-        distance_réelle2 = self.flitered_distance.data
-        if  self.commande_type.data ==2:
-            distance_voulue = 10.0
-            
-            #Calcul erreur position
-            err_x = self.goal[0] - self.posbateau[0]
-            err_y = self.goal[1] - self.posbateau[1]
-
-            distance_réelle = sqrt(err_x**2 + err_y**2)
-            
-            #Calcul angle désiré 
-            angle_voulu = atan2(err_y, err_x)
-            err_angle = angle_voulu - self.yaw
-            #err_angle = angle_voulu - self.yaw
+        if self.commande_type.data == 2:
+            # Récupération des données filtrées
+            err_angle = self.filtered_angle.data
             err_angle = atan2(sin(err_angle), cos(err_angle))
 
-            # Ajouter la correction pour s'aligner avec le QR code
-            qr_orientation_correction = -self.qr_angle.data  # Angle relatif du QR code
-            err_angle += qr_orientation_correction
-            err_angle = atan2(sin(err_angle), cos(err_angle))  # Normaliser à nouveau
-            
-            # Calcul de l'erreur de position
-            err_x = self.goal[0] - self.posbateau[0]
-            err_y = self.goal[1] - self.posbateau[1]
+            distance_reelle = self.filtered_distance.data
 
-            distance_réelle = sqrt(err_x**2 + err_y**2)
+            # Paramètres
+            distance_voulue = 10.0  # Distance cible
+            MAX_THRUST = 5000.0
+            K_p_distance = 10 # Gain proportionnel pour la distance
+            K_p_angle = 9  # Gain proportionnel pour l'angle
 
-            # Orientation globale basée sur le QR code
-            # Ajout de l'orientation du bateau pour obtenir l'angle global
-            angle_qrcode_global = self.qr_angle.data + self.yaw
-
-            # Angle pour aller vers la position cible
-            angle_voulu = atan2(err_y, err_x)
-
-            # Calcul de l'erreur d'angle globale
-            err_angle = angle_qrcode_global - self.yaw  # Angle cible moins orientation actuelle
-            err_angle = atan2(sin(err_angle), cos(err_angle))  # Normalisation de l'angle
-
+            # Ajustement de l'orientation
             msg_pos_left = Float64()
             msg_pos_right = Float64()
 
-            #Ajustement angle moteur 
-            if(abs(err_angle) > 0.05): #Si grosse erreur
-                motor_angle = max(min(err_angle, pi/4), -pi/4) #ON limite entre -pi/4 et pi/4
+            if abs(err_angle) > 0.05:  # Si l'erreur d'angle est significative
+                motor_angle = max(min(err_angle, pi / 4), -pi / 4)  # Limitation entre -π/4 et π/4
                 msg_pos_left.data = motor_angle
-                msg_pos_right.data = -motor_angle  # Inverse pour tourner
+                msg_pos_right.data = -motor_angle  # Inversion pour tourner
             else:
                 msg_pos_left.data = 0.0
                 msg_pos_right.data = 0.0
 
-            #Publication position moteurs
+            # Publication des ajustements moteurs
             self.publisher_pos_l.publish(msg_pos_left)
             self.publisher_pos_r.publish(msg_pos_right)
 
-            #Poussée 
-            thrust_left = Float64()
-            thrust_right = Float64()
-
-            # Calcul de la poussée en fonction de la distance
-            distance_error = distance_réelle - distance_voulue
-
-            # Gains de contrôle
-            K_p_distance = 20 # Gain proportionnel pour la distance
-            K_p_angle = 10   # Gain proportionnel pour l'angle
-
+            # Calcul de la poussée
+            distance_error = distance_reelle - distance_voulue
             base_thrust = K_p_distance * distance_error
             angle_correction = K_p_angle * err_angle
 
-            # Limitation de la poussée
-            MAX_THRUST = 5000.0
+            thrust_left = Float64()
+            thrust_right = Float64()
+
+            # Calcul de la poussée totale
             thrust_left.data = max(min(base_thrust + angle_correction, MAX_THRUST), -MAX_THRUST)
             thrust_right.data = max(min(base_thrust - angle_correction, MAX_THRUST), -MAX_THRUST)
 
-            # Réduction de la poussée si proche de la position cible
+            # Réduction de la poussée si proche de la cible
             if abs(distance_error) < 3:
-                #Peut-être réduire de façon proportionnel à la distance
                 thrust_left.data *= 0.5
                 thrust_right.data *= 0.5
 
@@ -402,10 +367,11 @@ class Tracking(Node):
             self.publisherl.publish(thrust_left)
             self.publisherr.publish(thrust_right)
 
-            self.get_logger().info(f"pos_left {msg_pos_left}")
-            self.get_logger().info(f"pos_right  {msg_pos_right}")
-            self.get_logger().info(f"thrust left {thrust_left}")
-            self.get_logger().info(f"thrust right {thrust_right}")
+            # Logs pour le débogage
+            self.get_logger().info(f"pos_left: {msg_pos_left.data}")
+            self.get_logger().info(f"pos_right: {msg_pos_right.data}")
+            self.get_logger().info(f"thrust_left: {thrust_left.data}")
+            self.get_logger().info(f"thrust_right: {thrust_right.data}")
 
 
 def main():

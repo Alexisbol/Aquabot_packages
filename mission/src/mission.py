@@ -286,13 +286,13 @@ class Mission(Node):
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
-            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche()):
+            if (self.proche_goal(30) and self.turbine_phase_2 != self.phase2_la_plus_proche()):
                 self.turbine_phase_2 = self.phase2_la_plus_proche()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
             
-            elif (self.proche_goal(40)):
+            elif (self.proche_goal(20)):
                 self.status = 'STABILISATION'
                 self.commande_type.data = 2  
                 self.commande_type_publishers.publish(self.commande_type) #commande de type 2 pour la phase 2
@@ -315,9 +315,9 @@ class Mission(Node):
             #    self.point.y = self.currentgoal.position.y + vect.y
             #    self.get_logger().info('turning around turbine')
 #
-        #if(s#elf.status == 'STABILISATION'):
-            #self.get_logger().info('------------STABILISATION--------------')
-            #self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
+        if(self.status == 'STABILISATION'):
+            self.get_logger().info('------------STABILISATION--------------')
+            self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
                 
 
             
