@@ -78,7 +78,7 @@ class Mission(Node):
 
         self.qr_angle = Float64()
         self.qrcode_angle_received = False
-        self.phase = UInt32
+        self.phase = UInt32()
 
         self.turbinesI = 0
         self.currentgoal = Point()
@@ -311,7 +311,7 @@ class Mission(Node):
                 #utiliser la commande de stabilisation
                 self.get_logger().info('----------------------------------')
                 self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
-                if (self.qr_angle.data < 0.1 and self.qr_angle.data > -0.1):
+                if (self.qr_angle.data < 0.15 and self.qr_angle.data > -0.15):
                     self.get_logger().info('calcul du point de stabilisation')
                     self.point_stabilisation = Point()
                     vect = Point()
