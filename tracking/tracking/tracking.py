@@ -58,8 +58,8 @@ def norme(v):
 # Constantes de proportionnalité
 k_d = 0.5   # Constante pour la distance
 k_theta = 20  # Constante pour l'orientation
-k_v = 200   # Constante pour ajuster la puissance du moteur linéaire
-k_omega = 60  # Constante pour ajuster la puissance du moteur angulaire
+k_v = 100   # Constante pour ajuster la puissance du moteur linéaire
+k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
 
 def commande(pos, theta, v_actual, omega_actual, objectif):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
@@ -88,6 +88,58 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     V_droite = k_v * delta_v - k_omega * delta_omega
 
     return V_gauche, V_droite,angle_error,delta_v,delta_omega,theta
+
+
+Kp = 70
+Ktheta = 1500
+Mtheta = 350
+
+def commande_angulaire(pos, theta, objectif, v, objectiforientation):
+    #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
+    x_target, y_target=objectif
+    x,y=pos
+
+    #if(objectiforientation == "None"):
+    #    objectiforientation = objectif
+
+    deltaX = x_target-x
+    deltaY = y_target-y
+    norm = np.sqrt(deltaX**2 + deltaY**2)
+
+    alpha = np.arctan2(deltaY, deltaX) - theta
+
+    if(abs(alpha)<np.pi/4):
+        phi = alpha
+        Np = Kp*norm
+    else:
+        phi = alpha + np.pi
+        Np = -1*Kp*norm
+
+    if(phi > np.pi):
+        phi-=np.pi
+    elif(phi < -np.pi):
+        phi+=np.pi
+
+    angle1 = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)
+    if(angle1 > np.pi):
+        angle1-=np.pi
+    elif(angle1 < -np.pi):
+        angle1+=np.pi
+
+    deltaTheta = angle1 - theta
+    Ntheta = Ktheta*deltaTheta #*(Np/abs(Np))
+
+    if(Ntheta > Mtheta):
+        Ntheta = Mtheta
+    elif(Ntheta < -Mtheta):
+        Ntheta = -Mtheta
+
+    Np = Np*np.exp(-4*abs(phi))
+
+    Nd = Np + Ntheta
+    Ng = Np - Ntheta
+
+    return Nd,Ng,phi
 
 class Tracking(Node):
     def __init__(self):
@@ -157,6 +209,13 @@ class Tracking(Node):
             10
         )
 
+        self.point_stabilisation_subscription = self.create_subscription( #éolienne à regarder
+            Pointfixed,
+            '/aquabot/point_stabilisation',
+            self.point_stabilisation_callback,
+            10
+        )
+
         self.publisherl = self.create_publisher(Float64,'/aquabot/thrusters/left/thrust',10)
         self.timer=self.create_timer(0.5,self.commandel_callback)
         self.publisherr = self.create_publisher(Float64,'/aquabot/thrusters/right/thrust',10)
@@ -168,12 +227,16 @@ class Tracking(Node):
         self.publisher_pos_r = self.create_publisher(Float64,'/aquabot/thrusters/right/pos',10)
         self.timer=self.create_timer(0.5,self.stabiliser_position)
 
+        self.timer=self.create_timer(0.2,self.commande_angulaire_callback)
 
         self.qr_angle = Float64()
         self.qr_angle.data = 10.0
 
+        self.point_stabilisation = Pointfixed()
+
         self.odom_received = False
         self.goal_received = False
+        self.point_stabilisation_received = False
         self.qrcode_angle_received = True
 
     def send_request(self, start, goal):
@@ -210,6 +273,10 @@ class Tracking(Node):
     def goal_callback(self,msg):
         self.goal = (msg.x,msg.y)
         self.goal_received = True
+
+    def point_stabilisation_callback(self,msg):
+        self.point_stabilisation = (msg.x,msg.y)
+        self.point_stabilisation_received = True
     
     def commande_type_callback(self,msg):
         self.commande_type = msg
@@ -217,6 +284,29 @@ class Tracking(Node):
     def qrcode_angle_callback(self,msg):
         self.qr_angle = msg
         self.qrcode_angle_received = True
+
+    def commande_angulaire_callback(self):
+        
+        if self.commande_type.data==3: # self.odom_received and self.path and self.commande_type.data==3
+            self.get_logger().info("entrer dans la boucle commande angulaire")
+            Ndmsg=Float64()
+            Ngmsg=Float64()
+            Thetamsg=Float64()
+            (Nd,Ng,theta)= commande_angulaire(self.posbateau,self.yaw,self.goal,self.vbateau,self.point_stabilisation)
+
+            Ndmsg.data=float(Nd)
+            Ngmsg.data=float(Ng)
+            Thetamsg.data=float(theta)
+
+            self.get_logger().info("Nd: '%s'" % Nd)
+            self.get_logger().info("Ng: '%s'" % Ng)
+            self.get_logger().info("Phi: '%s'" % theta)
+            self.get_logger().info("-----------------")
+
+            self.publisherl.publish(Ngmsg)
+            self.publisherr.publish(Ndmsg)
+            self.publisher_pos_l.publish(Thetamsg)
+            self.publisher_pos_r.publish(Thetamsg)
 
     def phase_callback(self,msg):
         self.phase = msg.data

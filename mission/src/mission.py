@@ -65,7 +65,7 @@ class Mission(Node):
 
         self.commande_type_publishers = self.create_publisher(UInt32,'/aquabot/commande_type',10)
 
-        self.timer = self.create_timer(1, self.timer_callback)
+        self.timer = self.create_timer(0.5, self.timer_callback)
 
         self.previouspahse = 0
 
@@ -239,16 +239,16 @@ class Mission(Node):
                     self.currentgoal = self.liste_turbines_reste[self.turbinesI]
                     self.currentcameragoal = self.currentgoal
 
-                    vect = Point()
-                    vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
-                    vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
-                    norm = np.sqrt(vect.x**2 + vect.y**2)
-                    vect.x = vect.x/norm
-                    vect.y = vect.y/norm
-                    self.point.x = self.currentgoal.position.x-vect.x*11
-                    self.point.y = self.currentgoal.position.y-vect.y*11
+                vect = Point()
+                vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+                vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+                norm = np.sqrt(vect.x**2 + vect.y**2)
+                vect.x = vect.x/norm
+                vect.y = vect.y/norm
+                self.point.x = self.currentgoal.position.x-vect.x*11
+                self.point.y = self.currentgoal.position.y-vect.y*11
 
-                    self.get_logger().info('going to: "%s"' % self.currentgoal.position)
+                self.get_logger().info('going to: "%s"' % self.currentgoal.position)
 
             elif(self.proche_goal(13)): #Arrivé mais pas QR code scanné
                 vect = Point()
@@ -261,7 +261,7 @@ class Mission(Node):
             if(self.phase == 2):
                 self.status = 'RALLY'
                 self.get_logger().info(self.status)
-                self.turbinesI = -1 # reset pour ne pas depasser l'index de la liste
+                self.turbine_phase_2 = -1 # reset pour ne pas depasser l'index de la liste
                 #norm = np.sqrt(vect.x**2 + vect.y**2)
                 #vect.x = vect.x/norm
                 #vect.y = vect.y/norm
@@ -271,7 +271,8 @@ class Mission(Node):
                 self.goal_publishers.publish(self.point)
 
         if(self.status == 'RALLY'):
-            if self.turbinesI == -1:
+            findturbine = False
+            if findturbine == False:
                 self.turbine_phase_2 = self.phase2_la_plus_proche()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
@@ -295,11 +296,13 @@ class Mission(Node):
             pointcam.y = self.currentcameragoal.position.y
             self.camera_publishers.publish(pointcam)
 
-            if (self.proche_goal(40) and self.turbine_phase_2 != self.phase2_la_plus_proche() and not self.proche_goal(25)):
+            if (self.proche_goal(50) and self.turbine_phase_2 != self.phase2_la_plus_proche() and not self.proche_goal(25)):
                 self.turbine_phase_2 = self.phase2_la_plus_proche()
                 self.currentgoal = self.liste_turbines[self.turbine_phase_2]
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
+            elif (self.proche_goal(30) and self.turbine_phase_2 == self.phase2_la_plus_proche()):
+                findturbine = True
 
             if(not self.proche_goal(50)): #pas assez proche pour etre sur que ce soit le bon qrcode
                 self.qrcode_received = False
@@ -315,9 +318,19 @@ class Mission(Node):
                     vect.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
                     vect.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
                     norm = np.sqrt(vect.x**2 + vect.y**2)
-                    self.point_stabilisation.x = self.currentgoal.position.x + vect.x/norm*10
-                    self.point_stabilisation.y = self.currentgoal.position.y + vect.y/norm*10
-                    self.phase = 'STABILISATION'
+                    self.point_stabilisation.x = self.currentgoal.position.x - vect.x/norm*11
+                    self.point_stabilisation.y = self.currentgoal.position.y - vect.y/norm*11
+                    self.status = 'STABILISATION'
+                    vect2 = Point()
+                    vect2.x = (self.currentgoal.position.x - self.odom.pose.pose.position.x)
+                    vect2.y = (self.currentgoal.position.y - self.odom.pose.pose.position.y)
+                    norm = np.sqrt(vect2.x**2 + vect2.y**2)
+                    vect.x = vect.x/norm
+                    vect.y = vect.y/norm
+                    self.point.x = self.currentgoal.position.x-vect.x*11
+                    self.point.y = self.currentgoal.position.y-vect.y*11
+                    self.goal_publishers.publish(self.point)
+                    
                     
                 
             elif(self.proche_goal(13)): #Arrivé mais pas QR code scanné
@@ -329,16 +342,17 @@ class Mission(Node):
                 self.get_logger().info('turning around turbine')
 
         if(self.status == 'STABILISATION'):
-
+            self.commande_type.data = 3 
             self.get_logger().info('------------STABILISATION--------------')
-            self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
-            self.commande_type.data = 2  
+            #self.get_logger().info('angle qr code "%s"' % self.qr_angle.data)
+            
             self.commande_type_publishers.publish(self.commande_type) #commande de type 2 pour la phase 2
-            self.goal_publishers.publish(self.point_stabilisation)
+            
             self.point_ref = Point()                            #point de reference sur l'éolienne pour la stabilisation
             self.point_ref.x = self.currentgoal.position.x
             self.point_ref.y = self.currentgoal.position.y
             self.point_stabilisation_publishers.publish(self.point_ref)
+            self.goal_publishers.publish(self.point)
 
 
                 
