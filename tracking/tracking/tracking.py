@@ -301,8 +301,8 @@ class Tracking(Node):
             
             #Calcul angle désiré 
             angle_voulu = atan2(err_x, err_y)
-            #err_angle = angle_voulu - self.qr_angle.data
-            err_angle = self.qr_angle.data
+            err_angle = - self.qr_angle.data
+            #err_angle = angle_voulu - self.yaw
             err_angle = atan2(sin(err_angle), cos(err_angle))
             
             msg_pos_left = Float64()
@@ -329,8 +329,8 @@ class Tracking(Node):
             distance_error = distance_réelle - distance_voulue
 
             # Gains de contrôle
-            K_p_distance = 200.0  # Gain proportionnel pour la distance
-            K_p_angle = 300.0    # Gain proportionnel pour l'angle
+            K_p_distance = 50  # Gain proportionnel pour la distance
+            K_p_angle = 200   # Gain proportionnel pour l'angle
 
             base_thrust = K_p_distance * distance_error
             angle_correction = K_p_angle * err_angle
