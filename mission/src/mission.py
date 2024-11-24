@@ -58,6 +58,9 @@ class Mission(Node):
         self.camera_publishers = self.create_publisher(Point,'/aquabot/camera_look_at',10)
         self.qr_publishers = self.create_publisher(String,'/vrx/windturbinesinspection/windturbine_checkup',10)
 
+        self.filtered_distance_range_bearing = self.create_publisher(Float64,'/aquabot/filtered_distance',10)
+        self.filtered_angle_range_bearing = self.create_publisher(Float64,'/aquabot/filtered_angle',10)
+
         self.commande_type_publishers = self.create_publisher(UInt32,'/aquabot/commande_type',10)
 
         self.timer = self.create_timer(1, self.timer_callback)
@@ -86,8 +89,13 @@ class Mission(Node):
         self.angle_window = deque(maxlen=5)     # For angles
 
         # Initialize filter values
-        self.filter_angle = 0.0
-        self.filter_distance = 0.0
+        
+        # Filtered values
+        self.filter_distance = Float64()
+        self.filter_angle = Float64()
+        self.filter_distance.data = 0.0
+        self.filter_angle.data = 0.0
+
         self.turbine_phase_2 = 0
 
         self.status = 'INITIALIZED'
@@ -125,9 +133,11 @@ class Mission(Node):
         self.distance_window.append(distance)
         self.angle_window.append(angle)
 
-        # Filtered values
-        self.filter_distance = self.median_filter(self.distance_window)
-        self.filter_angle = self.median_filter(self.angle_window)
+        self.filter_distance.data = self.median_filter(self.distance_window)
+        self.filter_angle.data = self.median_filter(self.angle_window)
+
+        self.filtered_angle_range_bearing.publish(self.filter_angle)
+        self.filtered_distance_range_bearing.publish(self.filter_distance)
 
     def turbinespose_callback(self,msg):
         self.liste_turbines = msg.poses
@@ -166,8 +176,12 @@ class Mission(Node):
         distances_eoliennes_from_bateau = np.array([np.linalg.norm(pos_bateau - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
 
         self.get_logger().info('distances_eolienne_from_bateau: "%s"' % distances_eoliennes_from_bateau)
+        
+        distances_goal_from_bateau = distances_eoliennes_from_bateau-self.filter_distance.data
 
-        closest_turbine_index = np.argmin(distances_eoliennes_from_bateau-self.filter_distance)
+        self.get_logger().info('distances_goal_from_bateau: "%s"' % distances_goal_from_bateau)
+
+        closest_turbine_index = np.argmin(np.abs(distances_eoliennes_from_bateau-self.filter_distance.data))
         self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
         return closest_turbine_index
 
@@ -278,7 +292,7 @@ class Mission(Node):
                 self.currentcameragoal = self.currentgoal
                 self.get_logger().info('CHANGEMENT DE CIBLE going to: "%s"' % self.currentgoal.position)
             
-            elif (self.proche_goal(35)):
+            elif (self.proche_goal(40)):
                 self.status = 'STABILISATION'
                 self.commande_type.data = 2  
                 self.commande_type_publishers.publish(self.commande_type) #commande de type 2 pour la phase 2

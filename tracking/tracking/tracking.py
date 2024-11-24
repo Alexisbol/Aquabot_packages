@@ -56,10 +56,10 @@ def norme(v):
     return dist(v,(0,0))
 
 # Constantes de proportionnalité
-k_d = 12    # Constante pour la distance
-k_theta = 13  # Constante pour l'orientation
-k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
-k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
+k_d = 0.5   # Constante pour la distance
+k_theta = 20  # Constante pour l'orientation
+k_v = 200   # Constante pour ajuster la puissance du moteur linéaire
+k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
 
 def commande(pos, theta, v_actual, omega_actual, objectif):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
@@ -71,6 +71,7 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     
     # Calcul de l'erreur d'angle
     angle_error = theta_target - theta
+    norme_angle_error = sqrt(angle_error**2)
     # Normaliser l'angle dans l'intervalle [-pi, pi]
     angle_error = atan2(sin(angle_error),cos(angle_error))
     
@@ -288,7 +289,7 @@ class Tracking(Node):
             msg=Float64()
             #self.get_logger().info('Path: "%s"' % self.path)
             (right_Thrust,lt,theta,somme,diff,yaw)= commande(self.posbateau,self.yaw,self.vbateau,self.wbateau,plusproche(self.posbateau,self.path))
-            #self.get_logger().info('accel gauche: "%s"' % lt)
+            #self.get_logger().info('angle_error: "%s"' % theta)
 
             msg.data=float(lt)
             self.publisherl.publish(msg)
