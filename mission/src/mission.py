@@ -176,8 +176,10 @@ class Mission(Node):
         distances_eoliennes_from_bateau = np.array([np.linalg.norm(pos_bateau - np.array([turbine.position.x, turbine.position.y])) for turbine in self.liste_turbines])
 
         self.get_logger().info('distances_eolienne_from_bateau: "%s"' % distances_eoliennes_from_bateau)
+        
+        distances_goal_from_bateau = distances_eoliennes_from_bateau-self.filter_distance.data
 
-        self.get_logger().info('distances_goal_from_bateau: "%s"' % distances_eoliennes_from_bateau-self.filter_distance.data)
+        self.get_logger().info('distances_goal_from_bateau: "%s"' % distances_goal_from_bateau)
 
         closest_turbine_index = np.argmin(np.abs(distances_eoliennes_from_bateau-self.filter_distance.data))
         self.get_logger().info('index de l eolienne potentielle: "%s"' % closest_turbine_index)
