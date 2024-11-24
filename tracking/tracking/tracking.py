@@ -59,7 +59,7 @@ def norme(v):
 k_d = 0.5   # Constante pour la distance
 k_theta = 20  # Constante pour l'orientation
 k_v = 200   # Constante pour ajuster la puissance du moteur linéaire
-k_omega = 30  # Constante pour ajuster la puissance du moteur angulaire
+k_omega = 60  # Constante pour ajuster la puissance du moteur angulaire
 
 def commande(pos, theta, v_actual, omega_actual, objectif):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
@@ -76,7 +76,7 @@ def commande(pos, theta, v_actual, omega_actual, objectif):
     angle_error = atan2(sin(angle_error),cos(angle_error))
 
     # Définir la vitesse linéaire et angulaire désirée
-    v_desired = k_d * ((1/(0.0002+sqrt(angle_error**2)))+ distance_target)
+    v_desired = k_d * ((1/(0.001+sqrt(angle_error**2)))+ distance_target)
     omega_desired = k_theta * angle_error
 
     # Calcul des erreurs de vitesse linéaire et angulaire
