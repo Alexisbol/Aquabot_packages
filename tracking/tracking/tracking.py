@@ -301,8 +301,9 @@ class Tracking(Node):
             
             #Calcul angle désiré 
             angle_voulu = atan2(err_x, err_y)
-            err_angle = angle_voulu - self.qr_angle.data
-            err_angle = atan2(sin(err_angle)), cos(err_angle)
+            #err_angle = angle_voulu - self.qr_angle.data
+            err_angle = self.qr_angle.data
+            err_angle = atan2(sin(err_angle), cos(err_angle))
             
             msg_pos_left = Float64()
             msg_pos_right = Float64()
