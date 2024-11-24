@@ -51,7 +51,7 @@ def plusproche(pos,path):
         if d<dist_min :
             dist_min=d
             im=i+1
-    return path[min(len(path)-1,im+3)]
+    return path[min(len(path)-1,im+14)]
 
 def norme(v):
     return dist(v,(0,0))
@@ -62,9 +62,9 @@ k_theta = 13  # Constante pour l'orientation
 k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-Kp = 1300
+Kp = 1000
 Ktheta = 1900
-Mp = 1300
+Mp = 1000
 Mtheta = 400
 
 def commande(pos, theta, objectif, v, objectiforientation = "None"):
@@ -81,6 +81,10 @@ def commande(pos, theta, objectif, v, objectiforientation = "None"):
 
     alpha = np.arctan2(deltaY, deltaX) - theta
     
+
+    alpha = np.arctan2(sin(alpha),cos(alpha))
+
+
     if(abs(alpha)<np.pi/4):
         phi = alpha
         Np = Kp*norm
@@ -88,10 +92,7 @@ def commande(pos, theta, objectif, v, objectiforientation = "None"):
         phi = alpha + np.pi
         Np = -1*Kp*norm
 
-    while(phi > np.pi):
-        phi-=np.pi
-    while(phi < -np.pi):
-        phi+=np.pi
+
 
     angle1 = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)
     angle1 = np.arctan2(sin(angle1),cos(angle1))
