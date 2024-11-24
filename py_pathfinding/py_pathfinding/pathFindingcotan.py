@@ -100,7 +100,6 @@ def estconnexe (g):
     for e in d :
 
         if d[e] == False :
-            #print(e)
             return(False)
     return(True)
 
@@ -170,7 +169,7 @@ def dijkstra (G,r):
 
 
 def diststar(G,r,a,c=0.1):
-    #print("r=",r," a=",a)
+    """renvoie la distance et le chemin le plus court pour aller de r à a dans le graphe G grace à Astar"""
     g=initp(G)
     g[r]["e"]=0
     s=[r]
@@ -304,6 +303,7 @@ def tracer_ligne(a,b,c):
     plt.plot((a[0],b[0]),(a[1],b[1]),c)
     
 def pointscotan(A,B,l,liobs):
+    """ajoute à l tout les segments qui sont cotangeants aux cercles A et B tout en évitant les obstacles de liobs"""
     [a,ra]=A
     [b,rb]=B
     [xa,ya]=a 
@@ -365,6 +365,7 @@ def angle(p,c):
 
 
 def arretecourbe(G,s,t,c):
+    """ajoute au graphe g une arrete courbe de s à t dont le centre est le point c"""
     tet = angle(s,c[0])-angle(t,c[0])
     tet = atan2(sin(tet),cos(tet))
     d = abs(tet)*c[1]
@@ -375,14 +376,13 @@ def arretecourbe(G,s,t,c):
 
 
 def verif(a,b,c1,c2,liobs):
+    """verifie que la ligne a b ne passe dans aucun obstacle"""
     xa,ya=a
     xb,yb=b
-    color=couleur_aleatoire()
     for (c,rc) in liobs:
         if True or((c,rc)!=c1 and (c,rc)!=c2) :
             if dist(a,c)<rc-1 or dist(b,c)<rc-1 :
-                #tracer_cercle(c,rc,color)
-                #tracer_ligne(a,b,color)
+                
                 return False
             xc,yc=c
             u=((xc-xa)*(xb-xa)+(yc-ya)*(yb-ya))/(dist(a,b)**2)
@@ -393,27 +393,6 @@ def verif(a,b,c1,c2,liobs):
     return True
 
 
-
-"""def tracebrut():
-
-    plt.figure(figsize=(6, 6))
-    for centre, rayon in Liobs:
-        tracer_cercle(centre, rayon,'b')
-
-    for (a,c1,b,c2) in llignes:
-        tracer_ligne(a,b,'b')
-    
-
-    # Personnalisation du graphique
-    plt.gca().set_aspect('equal', adjustable='box')  # Garder les proportions des cercles
-    plt.grid(False)
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    #plt.title('Cercles avec centres et rayons donnés')
-    #plt.legend()
-
-    # Affichage du graphique
-    plt.show()"""
 
 
 def tracer_arc_de_cercle(centre, rayon, point1, point2):
@@ -458,6 +437,7 @@ def tracegr(g,transpg=0.5,transpa=0.15,col="blue"):
                 tracer_arc_de_cercle(C[0],C[1],a,b)
 
 def ajoutept(g,a,liobs):
+    """ajoute le point a au graphe g en rajoutant tout les segments tangeants aux obstacles qui passent par a"""
     sommet(g,a,a)
     for (c,r) in liobs :
         x,y=c
@@ -477,7 +457,6 @@ def ajoutept(g,a,liobs):
             d=g[s]
             
             if d["centre"]==c :
-                #if c == (-44, -95):print(s)
                 arretecourbe(g,s,e,(c,r))
                 arretecourbe(g,s,f,(c,r))
 
@@ -491,19 +470,18 @@ def tracechem(l):
         tracer_ligne(l[i],l[i+1],'r')
 
 def path(g,l,pas=1):
+    """renvoie une liste de points séparés de environ pas mètres qui suit la liste l des points du graphe g """
     path=[]
     for i in range(len(l)-1):
         a=l[i]
         b=l[i+1]
         arrete=g[a]["adj"][b]
         d=arrete[0]
-        #print("distance = ",arrete[0])
         n=int(d//pas)
         if n == 0:
             n=1
         pr=d/n
-        #print("n = ",n)
-        #print("pr = ",pr)
+        #
         if len(arrete)==1:
             
             for j in range(n):
@@ -520,12 +498,9 @@ def path(g,l,pas=1):
                 angle2 += 2*pi
             # Générer des angles intermédiaires entre les deux points
             if abs(angle2-angle1) < pi  :
-                #print('a')
                 angles = np.linspace(angle1, angle2, n)  # 100 points pour tracer l'arc
             else:
-                #print('b')
-                #print(a,b)
-                #print(angle1*180/pi,angle2*180/pi)
+                
                 angles = np.linspace(angle1,angle2+2*pi, n)  # Pour traiter le cas où l'arc passe par 0 radians
             
             # Calculer les coordonnées des points de l'arc
@@ -540,30 +515,26 @@ def path(g,l,pas=1):
 
 
 
-Liobs =[((120, -50), 35),((-152, -6), 55),((110, 135), 50),((12, -102), 30),((92, 170), 30),((-92, 176), 40),((-40, 220), 32),((-44, -95), 32),((-30, -150), 32)]
-#Liobs =[((120, -50), 35),((-152, -6), 55),((110, 135), 50),((12, -102), 30),((92, 170), 30)]
-#Liobs =[((120, -50), 35),((-152, -6), 55)]
+#Liobs =[((120, -50), 35),((-152, -6), 55),((110, 135), 50),((12, -102), 30),((92, 170), 30),((-92, 176), 40),((-40, 220), 32),((-44, -95), 32),((-30, -150), 32)]
+Liobs =[((120, -50), 40),((-152, -6), 60),((110, 135), 55),((12, -102), 35),((92, 170), 35),((-92, 176), 45),((-40, 220), 37),((-44, -95), 37),((-30, -150), 37)]
 
 
 def pathfinding(a,b,Liobs):
+    """calcule le chemin entre a et b en évitant les obstacles contenus dans Liobs grace a la methode des cotangeantes"""
     llignes =[]
     g={}
 
     for i in range(len(Liobs)-1):
         for j in range(i+1,len(Liobs)):
-            pointscotan(Liobs[i],Liobs[j],llignes,Liobs)
+            pointscotan(Liobs[i],Liobs[j],llignes,Liobs)#on calcule toutes les cotangeants valides 
 
-    for (a0,c1,b0,c2) in llignes:
+    for (a0,c1,b0,c2) in llignes: #pour toutes ces cotangeantes on ajoutes les points dans le graphe et les arretes 
         sommet(g,a0,c1[0])
         sommet(g,b0,c2[0])
         arretedroite(g,a0,b0)
         for s in g :
             d=g[s]
-            #print(a)
-            """print(d["centre"])
-            print(c1)
-            print(s)
-            print(a0)"""
+           
             if d["centre"]==c1[0] and s!=a0:
                 arretecourbe(g,s,a0,c1)
             if d["centre"]==c2[0] and s!=b0:
@@ -581,7 +552,7 @@ def pathfinding(a,b,Liobs):
             temp = ((2+r)*temp[0]/norm,(2+r)*temp[1]/norm)
             b = (floor(c[0]+temp[0]),floor(c[1]+temp[1]))
 
-    ajoutept(g,a,Liobs)
+    ajoutept(g,a,Liobs) #on ajoute les points de départ et d'arrivée 
     ajoutept(g,b,Liobs)
 
 
@@ -591,33 +562,6 @@ def pathfinding(a,b,Liobs):
 
     l,p=diststar(g,b,a)
     path0=path(g,l)
-    #tracegr(g)
-    #print(path0)
+   
     return(path0)
 
-
-#pathfinding((-154,-7),(-67,84),Liobs)
-
-#print(pathfinding((0,0),(200,200),Liobs))
-
-#print(l)
-#print(path)
-#tracegr(g)
-
-
-
-
-
-"""
-print(g[d])
-for (x,y) in g[c]["adj"] :
-    plt.plot(x,y,color='r',marker='x')"""
-
-#print(path)
-"""
-for i in range(len(path)-1):
-    print(dist(path[i],path[i+1]))"""
-
-
-
-plt.show()
