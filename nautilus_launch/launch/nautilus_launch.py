@@ -7,7 +7,7 @@ def generate_launch_description():
 
     sl.node('camera_control')
 
-    sl.node('camera_qrcode','opencv_decoder.py')
+    sl.node('camera_qrcode','opencv_decoder.py',respawn=True,respawn_delay=0.2)
 
     sl.include('aquabot_ekf', 'ekf_launch.py')
 

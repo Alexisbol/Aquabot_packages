@@ -62,9 +62,10 @@ k_theta = 13  # Constante pour l'orientation
 k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
 k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-Kp = 70
-Ktheta = 1500
-Mtheta = 350
+Kp = 1300
+Ktheta = 1900
+Mp = 1300
+Mtheta = 400
 
 def commande(pos, theta, objectif, v, objectiforientation = "None"):
     #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
@@ -87,16 +88,16 @@ def commande(pos, theta, objectif, v, objectiforientation = "None"):
         phi = alpha + np.pi
         Np = -1*Kp*norm
 
-    if(phi > np.pi):
+    while(phi > np.pi):
         phi-=np.pi
-    elif(phi < -np.pi):
+    while(phi < -np.pi):
         phi+=np.pi
 
     angle1 = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)
-    if(angle1 > np.pi):
-        angle1-=np.pi
-    elif(angle1 < -np.pi):
-        angle1+=np.pi
+    angle1 = np.arctan2(sin(angle1),cos(angle1))
+    
+
+
 
     deltaTheta = angle1 - theta
     Ntheta = Ktheta*deltaTheta #*(Np/abs(Np))
@@ -106,7 +107,12 @@ def commande(pos, theta, objectif, v, objectiforientation = "None"):
     elif(Ntheta < -Mtheta):
         Ntheta = -Mtheta
 
-    Np = Np*np.exp(-4*abs(phi))
+    if(Np > Mp):
+        Np = Mp
+    elif(Np < -Mp):
+        Np = -Mp
+
+    Np = Np*np.exp(-20*abs(phi))
 
     Nd = Np + Ntheta
     Ng = Np - Ntheta
