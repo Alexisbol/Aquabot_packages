@@ -51,74 +51,77 @@ def plusproche(pos,path):
         if d<dist_min :
             dist_min=d
             im=i+1
-    return path[min(len(path)-1,im+14)]
+    return path[min(len(path)-1,im+14)],(len(path)-min(len(path)-1,im+14)-1)
 
 def norme(v):
     return dist(v,(0,0))
 
 # Constantes de proportionnalité
-k_d = 12    # Constante pour la distance
-k_theta = 13  # Constante pour l'orientation
-k_v = 4   # Constante pour ajuster la puissance du moteur linéaire
-k_omega = 40  # Constante pour ajuster la puissance du moteur angulaire
 
-Kp = 1000
+Kp = 1500
 Ktheta = 1900
-Mp = 1000
+
 Mtheta = 400
 
-def commande(pos, theta, objectif, v, objectiforientation = "None"):
-    #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
-    x_target, y_target=objectif
-    x,y=pos
+Kv = 1/4
+m = 1000 #masse du bateau ?
 
+def commande(pos, theta, objectif, v, vobj, objectiforientation = "None"):
+    #Fonction qui détermine la commande à envoyer à nos 2 moteurs pour suivre l'objectif
     if(objectiforientation == "None"):
         objectiforientation = objectif
+    
+    x_target, y_target=objectif
+    x,y=pos
+    vx,vy = v
 
     deltaX = x_target-x
     deltaY = y_target-y
-    norm = np.sqrt(deltaX**2 + deltaY**2)
+    dist_a_obj = np.sqrt(deltaX**2 + deltaY**2)
+
+    vobj = Kv*vobj
+
+    deltaV = vobj - np.sqrt(vx**2+vy**2)
+
+    F = np.float_power((2*(deltaV**2)*dist_a_obj/m),1/3)
+
+
 
     alpha = np.arctan2(deltaY, deltaX) - theta
-    
-
     alpha = np.arctan2(sin(alpha),cos(alpha))
 
 
     if(abs(alpha)<np.pi/4):
         phi = alpha
-        Np = Kp*norm
+        Np = Kp*F/2
     else:
         phi = alpha + np.pi
-        Np = -1*Kp*norm
+        Np = -1*Kp*F/2
 
-
+    phi = np.arctan2(sin(phi),cos(phi))
 
     angle1 = np.arctan2(objectiforientation[1]-y,objectiforientation[0]-x)
-    angle1 = np.arctan2(sin(angle1),cos(angle1))
-    
-
 
 
     deltaTheta = angle1 - theta
-    Ntheta = Ktheta*deltaTheta #*(Np/abs(Np))
+    Ntheta = Ktheta*deltaTheta
 
     if(Ntheta > Mtheta):
         Ntheta = Mtheta
     elif(Ntheta < -Mtheta):
         Ntheta = -Mtheta
 
-    if(Np > Mp):
-        Np = Mp
-    elif(Np < -Mp):
-        Np = -Mp
+    #if(Np > Mp):
+    #    Np = Mp
+    #elif(Np < -Mp):
+    #    Np = -Mp
 
     Np = Np*np.exp(-20*abs(phi))
 
     Nd = Np + Ntheta
     Ng = Np - Ntheta
     
-    return Nd,Ng,phi
+    return Nd,Ng,phi,angle1
 
 class Tracking(Node):
     def __init__(self):
@@ -253,16 +256,24 @@ class Tracking(Node):
             Ndmsg=Float64()
             Ngmsg=Float64()
             Thetamsg=Float64()
-            (Nd,Ng,theta)= commande(self.posbateau,self.yaw,plusproche(self.posbateau,self.path),self.vbateau)
+            obj,vobj = plusproche(self.posbateau,self.path)
+            (Nd,Ng,theta,angle1)= commande(self.posbateau,self.yaw,obj,self.vbateau,vobj)
 
             Ndmsg.data=float(Nd)
             Ngmsg.data=float(Ng)
             Thetamsg.data=float(theta)
+            vx,vy = self.vbateau
+            v = np.sqrt(vx**2+vy**2)
 
             self.get_logger().info("Nd: '%s'" % Nd)
             self.get_logger().info("Ng: '%s'" % Ng)
             self.get_logger().info("Phi: '%s'" % theta)
+            self.get_logger().info("Angle1: '%s'" % angle1)
+
             self.get_logger().info("-----------------")
+            self.get_logger().info("V: '%s'" % v)
+            self.get_logger().info("Vobj: '%s'" % vobj)
+            self.get_logger().info("#################")
 
             self.publisherl.publish(Ngmsg)
             self.publisherr.publish(Ndmsg)
