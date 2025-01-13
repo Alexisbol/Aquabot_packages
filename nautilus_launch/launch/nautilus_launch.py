@@ -17,7 +17,7 @@ def generate_launch_description():
                launch_arguments={'namespace': 'aquabot',
                                  'use_namespace': 'true',
                                  'map':[sl.find('nautilus_launch', 'testmap.yaml')],
-                                 })
+                                 'params_file':[sl.find('nautilus_launch', 'nav2_params.yaml')]})
 
     #sl.node('py_pathfinding', 'pathfinding')
 
