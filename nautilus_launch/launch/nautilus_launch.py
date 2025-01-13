@@ -5,7 +5,7 @@ def generate_launch_description():
 
     sl = SimpleLauncher(use_sim_time=True)
 
-    sl.set_parameters('bt_navigator', parameters = {'odom_topic':'/aquabo/odom'})
+    sl.set_parameters('/aquabot/bt_navigator', parameters = {'odom_topic':'/aquabot/odom'})
 
     #sl.node('camera_control')
 
