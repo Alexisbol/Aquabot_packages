@@ -5,16 +5,24 @@ def generate_launch_description():
 
     sl = SimpleLauncher(use_sim_time=True)
 
-    sl.node('camera_control')
+    sl.set_parameters('bt_navigator', parameters = {'odom_topic':'/aquabo/odom'})
 
-    sl.node('camera_qrcode','opencv_decoder.py')
+    #sl.node('camera_control')
 
+    #sl.node('camera_qrcode','opencv_decoder.py')
+    
     sl.include('aquabot_ekf', 'ekf_launch.py')
+    
+    sl.include('nav2_bringup', 'bringup_launch.py',
+               launch_arguments={'namespace': 'aquabot',
+                                 'use_namespace': 'true',
+                                 'map':[sl.find('nautilus_launch', 'testmap.yaml')],
+                                 })
 
-    sl.node('py_pathfinding', 'pathfinding')
+    #sl.node('py_pathfinding', 'pathfinding')
 
-    sl.node('tracking')
+    #sl.node('tracking')
 
-    sl.node('mission', 'mission.py')
+    #sl.node('mission', 'mission.py')
     
     return sl.launch_description()
