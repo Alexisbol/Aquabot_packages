@@ -2,7 +2,7 @@ controller_server:
   ros__parameters:
     map_frame: world  # Global frame for the map
     odom_frame: world  # Local odometry frame
-    base_frame: wamv/base_link  # Robot base frame
+    base_frame: aquabot/wamv/base_link  # Robot base frame
     controller_plugins: ["FollowPath"]
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
@@ -41,7 +41,7 @@ waypoint_follower:
 global_costmap:
   ros__parameters:
     global_frame: world
-    robot_base_frame: wamv/base_link
+    robot_base_frame: aquabot/wamv/base_link
     width: 500         # Largeur de la carte de coût (en nombre de cellules)
     height: 500        # Hauteur de la carte de coût (en nombre de cellules)
     resolution: 1.0   # Résolution de la carte de coût (en mètres par cellule)
@@ -51,7 +51,7 @@ global_costmap:
 local_costmap:
   ros__parameters:
     global_frame: world
-    robot_base_frame: wamv/base_link
+    robot_base_frame: aquabot/wamv/base_link
     width: 100         # Largeur de la carte locale (en nombre de cellules)
     height: 100        # Hauteur de la carte locale (en nombre de cellules)
     robot_radius: 0.5 # Rayon du robot (en mètres)
