@@ -12,15 +12,22 @@ def generate_launch_description():
     #sl.node('camera_qrcode','opencv_decoder.py')
     
     # launch the EKF for the aquabot 
-    sl.declare_arg('rviz', True)
+    sl.declare_arg('rviz', False)
     sl.declare_arg('unify',True)
 
     with sl.group(if_arg = 'rviz'):
-        sl.rviz(sl.find('aquabot_ekf', 'ekf.rviz'))
+        sl.rviz(sl.find('aquabot_ekf', 'ekf_modif.rviz'))
 
     for link in ('base_link', 'imu_wamv_link', 'gps_wamv_link', 'receiver', 'right_engine_link', 'left_engine_link', 'main_camera_post_link', 'right_propeller_link', 'left_propeller_link'):
         sl.node('tf2_ros', 'static_transform_publisher', name='static_'+link,
                 arguments = ['--frame-id', 'wamv/'+link, '--child-frame-id', 'aquabot/wamv/'+link])
+
+
+    # ceux la c'est juste pour que rviz2 soit content
+    for link in ('base_link', 'imu_wamv_link', 'gps_wamv_link', 'receiver', 'right_engine_link', 'left_engine_link', 'main_camera_post_link', 'right_propeller_link', 'left_propeller_link', 'cpu_cases_link', 'left_battery_link', 'main_camera_link', 'main_camera_link_optical', 'main_camera_post_arm_link', 'right_battery_link'):
+        sl.node('tf2_ros', 'static_transform_publisher', name='static_forrviz2_'+link,
+                arguments = ['--frame-id', 'wamv/wamv/'+link, '--child-frame-id', 'wamv/'+link])
+
 
     sl.node('aquabot_ekf','gps2pose',
             parameters={'unify': sl.arg('unify')})
@@ -32,10 +39,13 @@ def generate_launch_description():
             remappings = {'odometry/filtered': 'odom'},
             output='screen')
     
+    sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'world', '--frame-id', 'map'])
+    sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'wamv/wamv/base_link', '--frame-id', 'wamv/base_link'])
+    sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'base_link', '--frame-id', 'wamv/base_link'])
+
     #run nav2 stack
     sl.include('nav2_bringup', 'bringup_launch.py',
-               launch_arguments={'namespace': 'aquabot',
-                                 'use_namespace': 'true',
+               launch_arguments={
                                  'map':[sl.find('nautilus_launch', 'map_400.yaml')],
                                  'params_file' : [sl.find('nautilus_launch','nav2_params.yaml')]})
 
