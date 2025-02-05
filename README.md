@@ -112,3 +112,9 @@ Le noeud de control de la camera à besoin d'un point de référence à regarder
 ```
 ros2 topic pub /aquabot/camera_look_at geometry_msgs/Point "{x: 1000.0, y: 1000.0, z: 0.0}"
 ```
+
+```
+ros2 run tf2_ros static_transform_publisher 300 300 0 0 0 0 map world
+ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 wamv/base_link base_link
+
+```
