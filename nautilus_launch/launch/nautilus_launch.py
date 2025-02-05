@@ -25,7 +25,7 @@ def generate_launch_description():
     sl.node('aquabot_ekf','gps2pose',
             parameters={'unify': sl.arg('unify')})
     
-    #sl.node('update_map','add_turbines')
+    sl.node('update_map','add_turbines')
 
 
     # run an EKF for wamv

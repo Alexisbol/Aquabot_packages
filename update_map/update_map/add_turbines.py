@@ -16,6 +16,16 @@ class Add_turbines(Node):
 
         self.map_updated = False
 
+        # Obtenir le répertoire de base où le script est exécuté
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
+        self.get_logger().info(f"base path  : {self.base_path}")
+
+
+        # Construire les chemins relatifs
+        self.map_path = self.base_path.replace('update_map/lib/python3.10/site-packages/update_map', 'nautilus_launch/share/nautilus_launch/params/map_400.png')
+        self.updated_map_path = self.base_path.replace('update_map/lib/python3.10/site-packages/update_map', 'nautilus_launch/share/nautilus_launch/params/map_updated_400.png')
+        self.get_logger().info(f"nouveau path  : {self.updated_map_path}")
+
 
     def sub_cb(self,msg):
         self.get_logger().info("turbines pos get")
@@ -23,18 +33,24 @@ class Add_turbines(Node):
             turbines = []
             for pos in msg.poses:
                 p=pos.position
-                turbines.append((int(p.x-200),int(p.y-200)))
+                turbines.append((int(p.x+400),int(-p.y+400)))
 
-            img = cv2.imread("/home/mathijs/ros2_ws/install/nautilus_launch/share/nautilus_launch/params/map_400.png")
+            img = cv2.imread(self.map_path)  
             if img is None:
-                self.get_logger().info("image non ouverte")
+                self.get_logger().error("Erreur : Impossible d'ouvrir l'image.")
 
             for p in turbines:
-                self.get_logger().info(f"Type de p : {type(p)}")
+                self.get_logger().info(f"Type de p : {type(p)}, Valeur : {p}")
 
-                cv2.circle(img,p,20,(255,255,255),-1)
+                cv2.circle(img,p,20,(150,150,150),-1)
+                cv2.circle(img,p,15,(75,75,75),-1)
+                cv2.circle(img,p,10,(0,0,0),-1)
 
-            cv2.imwrite("/home/mathijs/ros2_ws/install/nautilus_launch/share/nautilus_launch/params/map_400_updated.png",img)
+            if cv2.imwrite(self.updated_map_path, img):
+                self.get_logger().info(f"Image mise à jour enregistrée dans : {self.updated_map_path}")
+            else:
+                self.get_logger().error("Erreur lors de la sauvegarde de l'image.")
+
             self.map_updated = True
 
 def main():
