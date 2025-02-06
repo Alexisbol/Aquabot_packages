@@ -38,7 +38,7 @@ def generate_launch_description():
     sl.include('nav2_bringup', 'bringup_launch.py',
                launch_arguments={'namespace': 'aquabot',
                                  'use_namespace': 'true',
-                                 'map':[sl.find('nautilus_launch', 'depot.yaml')],
+                                 'map':[sl.find('nautilus_launch', 'map_400.yaml')],
                                  'params_file' : [sl.find('nautilus_launch','nav2_params.yaml')]})
 
     
