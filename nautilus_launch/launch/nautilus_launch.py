@@ -49,6 +49,8 @@ def generate_launch_description():
                                  'map':[sl.find('nautilus_launch', 'map_400.yaml')],
                                  'params_file' : [sl.find('nautilus_launch','nav2_params.yaml')]})
 
+    sl.node()
+
     #sl.node('py_pathfinding', 'pathfinding')
 
     #sl.node('tracking')
