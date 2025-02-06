@@ -16,7 +16,7 @@ def generate_launch_description():
     sl.declare_arg('unify',True)
 
     with sl.group(if_arg = 'rviz'):
-        sl.rviz(sl.find('aquabot_ekf', 'ekf_modif.rviz'))
+        sl.rviz(sl.find('aquabot_ekf', 'ekf.rviz'))
 
     for link in ('base_link', 'imu_wamv_link', 'gps_wamv_link', 'receiver', 'right_engine_link', 'left_engine_link', 'main_camera_post_link', 'right_propeller_link', 'left_propeller_link'):
         sl.node('tf2_ros', 'static_transform_publisher', name='static_'+link,
