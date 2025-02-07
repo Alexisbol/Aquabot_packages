@@ -44,6 +44,11 @@ def generate_launch_description():
     sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'world', '--frame-id', 'map'])
     sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'wamv/base_link', '--frame-id', 'wamv/wamv/base_link'])
     sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'base_link', '--frame-id', 'wamv/base_link'])
+    sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'wamv/base_link', '--frame-id', 'world'])
+    sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'aquabot/wamv/base_link', '--frame-id', 'map'])
+
+
+
 
     #run nav2 stack
     sl.include('nav2_bringup', 'bringup_launch.py',
