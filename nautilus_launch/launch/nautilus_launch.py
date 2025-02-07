@@ -29,6 +29,8 @@ def generate_launch_description():
                 arguments = ['--frame-id', 'wamv/wamv/'+link, '--child-frame-id', 'wamv/'+link])
 
 
+
+    sl.node('update_map','add_turbines')
     sl.node('aquabot_ekf','gps2pose',
             parameters={'unify': sl.arg('unify')})
 
