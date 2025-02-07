@@ -28,7 +28,7 @@ class Add_turbines(Node):
 
 
     def sub_cb(self,msg):
-        self.get_logger().info("turbines pos get")
+        #self.get_logger().info("turbines pos get")
         if self.map_updated == False :
             turbines = []
             for pos in msg.poses:
@@ -40,15 +40,16 @@ class Add_turbines(Node):
                 self.get_logger().error("Erreur : Impossible d'ouvrir l'image.")
 
             for p in turbines:
-                self.get_logger().info(f"Type de p : {type(p)}, Valeur : {p}")
+                #self.get_logger().info(f"Type de p : {type(p)}, Valeur : {p}")
 
                 cv2.circle(img,p,20,(150,150,150),-1)
                 cv2.circle(img,p,15,(75,75,75),-1)
                 cv2.circle(img,p,10,(0,0,0),-1)
 
-            if cv2.imwrite(self.updated_map_path, img):
-                self.get_logger().info(f"Image mise à jour enregistrée dans : {self.updated_map_path}")
-            else:
+            #if cv2.imwrite(self.updated_map_path, img):
+                #self.get_logger().info(f"Image mise à jour enregistrée dans : {self.updated_map_path}")
+
+            if not cv2.imwrite(self.updated_map_path, img):
                 self.get_logger().error("Erreur lors de la sauvegarde de l'image.")
 
             self.map_updated = True
