@@ -42,7 +42,7 @@ def generate_launch_description():
             output='screen')
     
     sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'world', '--frame-id', 'map'])
-    sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'wamv/wamv/base_link', '--frame-id', 'wamv/base_link'])
+    sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'wamv/base_link', '--frame-id', 'wamv/wamv/base_link'])
     sl.node('tf2_ros', 'static_transform_publisher', name='static_map_2', arguments=['--child-frame-id', 'base_link', '--frame-id', 'wamv/base_link'])
 
     #run nav2 stack
