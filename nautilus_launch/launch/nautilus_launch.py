@@ -12,7 +12,7 @@ def generate_launch_description():
     #sl.node('camera_qrcode','opencv_decoder.py')
     
     # launch the EKF for the aquabot 
-    sl.declare_arg('rviz', False)
+    sl.declare_arg('rviz', True)
     sl.declare_arg('unify',True)
 
     with sl.group(if_arg = 'rviz'):
@@ -54,11 +54,11 @@ def generate_launch_description():
     sl.include('nav2_bringup', 'bringup_launch.py',
                launch_arguments={
                                  'map':[sl.find('nautilus_launch', 'map_400.yaml')],
-                                 'params_file' : [sl.find('nautilus_launch','nav2_params_BACKUP.yaml')]})
+                                 'params_file' : [sl.find('nautilus_launch','nav2_params.yaml')]})
 
     #sl.node('py_pathfinding', 'pathfinding')
 
-    #sl.node('tracking')
+    #sl.node('diff_control', 'control_node.py')
 
     #sl.node('mission', 'mission.py')
     
