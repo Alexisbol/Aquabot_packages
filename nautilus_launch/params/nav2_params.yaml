@@ -56,7 +56,11 @@ bt_navigator:
     - nav2_back_up_cancel_bt_node
     - nav2_drive_on_heading_cancel_bt_node
 
-    
+map_server:
+  ros__parameters:
+    use_sim_time: true
+    yaml_filename: "/nautilus_launch/params/map_400.yaml"  # Correct path to map file
+
 controller_server:
   ros__parameters:
     use_sim_time: True

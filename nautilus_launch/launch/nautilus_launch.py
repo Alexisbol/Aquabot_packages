@@ -30,7 +30,7 @@ def generate_launch_description():
 
 
 
-    sl.node('update_map','add_turbines')
+    #sl.node('update_map','add_turbines')
     sl.node('aquabot_ekf','gps2pose',
             parameters={'unify': sl.arg('unify')})
 
@@ -54,7 +54,7 @@ def generate_launch_description():
     sl.include('nav2_bringup', 'bringup_launch.py',
                launch_arguments={
                                  'map':[sl.find('nautilus_launch', 'map_400.yaml')],
-                                 'params_file' : [sl.find('nautilus_launch','nav2_params.yaml')]})
+                                 'params_file' : [sl.find('nautilus_launch','nav2_params_BACKUP.yaml')]})
 
     #sl.node('py_pathfinding', 'pathfinding')
 
