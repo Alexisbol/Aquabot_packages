@@ -3,6 +3,15 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 
+from math import atan2, pi, cos, sin
+from scipy.optimize import minimize
+
+
+
+
+
+
+
 def clamp(value, min_value, max_value):
     return max(min_value, min(value, max_value))
 
@@ -14,13 +23,15 @@ class ControlNode(Node):
         self.subscription = self.create_subscription(
             Twist,
             '/cmd_vel',
-            self.cmd_callback,
+            self.cmd_callback_opt,
             10  # QoS profile (10 is a good default)
         )
         
         # Publishers for left and right thruster commands.
         self.publisherl = self.create_publisher(Float64, '/aquabot/thrusters/left/thrust', 10)
         self.publisherr = self.create_publisher(Float64, '/aquabot/thrusters/right/thrust', 10)
+        self.pubtl = self.create_publisher(Float64, '/aquabot/thrusters/left/pos', 10)
+        self.pubtr = self.create_publisher(Float64, '/aquabot/thrusters/right/pos', 10)
 
         # Set the distance between thrusters (meters).
         self.L = 0.3  # Adjust based on your boat's geometry.
@@ -31,6 +42,7 @@ class ControlNode(Node):
         self.K_linear = 100.0  # Gain for linear speed (m/s -> thruster units).
         # Using the same gain for the angular component.
         self.K_angular = self.K_linear/2  # Gain for angular speed (rad/s -> thruster units).
+
 
     def cmd_callback(self, msg):
         # Retrieve linear and angular velocities from the cmd_vel message.
@@ -63,6 +75,55 @@ class ControlNode(Node):
 
         self.publisherl.publish(left_msg)
         self.publisherr.publish(right_msg)
+
+
+    def cmd_callback_opt(self,msg):
+
+        def force(u):
+    
+            x = -3
+            xt = -0.278156
+            y = 0.6
+            fl,fr,tl,tr = u
+            fx = fl*cos(tl) + fr*cos(tr)
+            fy = fl*sin(tl) + fr*sin(tr)
+            m = fl*(x*sin(tl) - y*cos(tl)) + fr*(x*sin(tr) + y*cos(tr))
+
+            return (fx-self.fxd)**2 + (fy-self.fyd)**2 + (m-self.md)**2 + 0.1*tl**2 + 0.1*tr**2
+        
+            
+
+        self.fxd = 500*msg.linear.x     
+        self.md = 100*msg.angular.z
+        self.fyd=0
+
+        fl,fr,tl,tr = minimize(force, [0,0,0,0], method='SLSQP',
+                                bounds = [(-5000,5000)]*2 + [(-pi/4,pi/4)]*2).x
+
+    
+        left_msg = Float64()
+        right_msg = Float64()
+        tl_msg = Float64()
+        tr_msg = Float64()
+        tl_msg.data = tl
+        tr_msg.data = tr
+        left_msg.data = fl
+        right_msg.data = fr
+
+        self.get_logger().info(
+            f'Input: v={self.fxd:.2f} m/s, w={self.md:.2f} rad/s | '
+            f'Computed: Left={fl:.0f}, Right={fr:.0f}'
+        )
+
+
+        self.publisherl.publish(left_msg)
+        self.publisherr.publish(right_msg)
+        self.pubtl.publish(tl_msg)
+        self.pubtr.publish(tr_msg)
+
+    
+    
+
 
 def main(args=None):
     rclpy.init(args=args)
