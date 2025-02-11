@@ -22,8 +22,8 @@ class Add_turbines(Node):
 
 
         # Construire les chemins relatifs
-        self.map_path = self.base_path.replace('update_map/lib/python3.10/site-packages/update_map', 'nautilus_launch/share/nautilus_launch/params/map_400.png')
-        self.updated_map_path = self.base_path.replace('update_map/lib/python3.10/site-packages/update_map', 'nautilus_launch/share/nautilus_launch/params/map_updated_400.png')
+        self.map_path = self.base_path.replace('lib/python3.10/site-packages/update_map','share/nautilus_launch/params/map_400.png')
+        self.updated_map_path = self.base_path.replace('lib/python3.10/site-packages/update_map', 'share/nautilus_launch/params/map_updated_400.png')
         self.get_logger().info(f"nouveau path  : {self.updated_map_path}")
 
         #self.updated_map_path = "map_updated_400.png"
