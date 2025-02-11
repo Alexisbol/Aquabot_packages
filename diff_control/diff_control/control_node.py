@@ -9,7 +9,7 @@ def clamp(value, min_value, max_value):
 class ControlNode(Node):
     def __init__(self):
         super().__init__('control_node')
-        
+
         # Subscribe to the /cmd_vel topic.
         self.subscription = self.create_subscription(
             Twist,
@@ -28,9 +28,9 @@ class ControlNode(Node):
         # Conversion factor:
         # Suppose 1 m/s forward should be mapped to 1000 command units.
         # You might need to calibrate this value based on your system.
-        self.K_linear = 100.0  # Gain for linear speed (m/s -> thruster units).
+        self.K_linear = 80.0  # Gain for linear speed (m/s -> thruster units).
         # Using the same gain for the angular component.
-        self.K_angular = self.K_linear/2  # Gain for angular speed (rad/s -> thruster units).
+        self.K_angular = self.K_linear / 1.3 # Gain for angular speed (rad/s -> thruster units).
 
     def cmd_callback(self, msg):
         # Retrieve linear and angular velocities from the cmd_vel message.
@@ -38,8 +38,11 @@ class ControlNode(Node):
         w = msg.angular.z    # Angular speed in rad/s.
 
         # Differential drive equations:
-        v_left = -w * self.L / 2.0
-        v_right = w * self.L / 2.0
+        #v_left = w * self.L / 2.0
+        #v_right = -w * self.L / 2.0
+
+        v_left = v - (w * self.L / 2.0)
+        v_right = v + (w * self.L / 2.0)
 
         # Scale the computed speeds to thruster command units.
         cmd_left = self.K_linear * v + self.K_angular * v_left

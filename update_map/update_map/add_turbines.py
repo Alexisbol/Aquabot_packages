@@ -6,9 +6,6 @@ import cv2
 import os
 
 class Add_turbines(Node):
-
-
-
     def __init__(self):
         super().__init__('add_turbines')
 
@@ -19,7 +16,6 @@ class Add_turbines(Node):
         # Obtenir le répertoire de base où le script est exécuté
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.get_logger().info(f"base path  : {self.base_path}")
-
 
         # Construire les chemins relatifs
         self.map_path = self.base_path.replace('update_map/lib/python3.10/site-packages/update_map', 'nautilus_launch/share/nautilus_launch/params/map_400.png')
@@ -56,7 +52,6 @@ class Add_turbines(Node):
 
 def main():
     rclpy.init()
-
     add_turbines = Add_turbines()
     rclpy.spin(add_turbines)
     rclpy.shutdown()
