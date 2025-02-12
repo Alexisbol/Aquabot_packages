@@ -2,14 +2,33 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
+from nav_msgs.msg import Odometry
 
 from math import atan2, pi, cos, sin
 from scipy.optimize import minimize
+import numpy as np
 
 
 
+def euler_from_quaternion(quaternion):
+    
+    x = quaternion.x
+    y = quaternion.y
+    z = quaternion.z
+    w = quaternion.w
+    
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x * x + y * y)
+    roll = np.arctan2(sinr_cosp, cosr_cosp)
 
+    sinp = 2 * (w * y - z * x)
+    pitch = np.arcsin(sinp)
 
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y * y + z * z)
+    yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+    return roll, pitch, yaw
 
 
 def clamp(value, min_value, max_value):
@@ -26,7 +45,13 @@ class ControlNode(Node):
             self.cmd_callback_opt,
             10  # QoS profile (10 is a good default)
         )
-        
+
+        self.subscription = self.create_subscription(
+            Odometry,
+            'aquabot/odom',
+            self.odom_callback,
+            10  # QoS profile (10 est une bonne valeur par défaut)
+        )        
         # Publishers for left and right thruster commands.
         self.publisherl = self.create_publisher(Float64, '/aquabot/thrusters/left/thrust', 10)
         self.publisherr = self.create_publisher(Float64, '/aquabot/thrusters/right/thrust', 10)
@@ -42,6 +67,27 @@ class ControlNode(Node):
         self.K_linear = 100.0  # Gain for linear speed (m/s -> thruster units).
         # Using the same gain for the angular component.
         self.K_angular = self.K_linear/2  # Gain for angular speed (rad/s -> thruster units).
+        self.odom_received = False
+
+    def odom_callback(self, msg):
+
+        if not self.odom_received : 
+            self.get_logger().info("first odom received")
+        self.posbateau=(msg.pose.pose.position.x,msg.pose.pose.position.y)
+        self.vbateau=(msg.twist.twist.linear.x,msg.twist.twist.linear.y)
+        
+        self.roll, self.pitch, self.yaw = euler_from_quaternion(msg.pose.pose.orientation)
+        #self.yaw=2*atan2(msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
+        self.wbateau=(msg.twist.twist.angular.z)
+        self.odom_received = True
+        # Afficher les informations de position et de vitesse reçues
+        #self.get_logger().info(f"Position -> x: {msg.pose.pose.position.x}, y: {msg.pose.pose.position.y}, z: {msg.pose.pose.position.z}")
+        #self.get_logger().info(f"Orientation -> x: {msg.pose.pose.orientation.x}, y: {msg.pose.pose.orientation.y}, z: {msg.pose.pose.orientation.z}, w: {msg.pose.pose.orientation.w}")
+        #self.get_logger().info(f"Orientation -> yaw: {self.yaw}, roll: {self.roll}, pitch: {self.pitch}")
+
+        #self.get_logger().info(f"Vitesse linéaire -> x: {msg.twist.twist.linear.x}, y: {msg.twist.twist.linear.y}, z: {msg.twist.twist.linear.z}")
+        #self.get_logger().info(f"Vitesse angulaire -> x: {msg.twist.twist.angular.x}, y: {msg.twist.twist.angular.y}, z: {msg.twist.twist.angular.z}")
+
 
 
     def cmd_callback(self, msg):
@@ -79,6 +125,10 @@ class ControlNode(Node):
 
     def cmd_callback_opt(self,msg):
 
+        if not self.odom_received : return 
+
+
+
         def force(u):
     
             x = -3
@@ -93,8 +143,8 @@ class ControlNode(Node):
         
             
 
-        self.fxd = 500*msg.linear.x     
-        self.md = 100*msg.angular.z
+        self.fxd = 300*(5*msg.linear.x -self.vbateau[0])    
+        self.md = 300*(msg.angular.z-3*self.wbateau)
         self.fyd=0
 
         fl,fr,tl,tr = minimize(force, [0,0,0,0], method='SLSQP',
@@ -111,7 +161,8 @@ class ControlNode(Node):
         right_msg.data = fr
 
         self.get_logger().info(
-            f'Input: v={self.fxd:.2f} m/s, w={self.md:.2f} rad/s | '
+            f'Input: v={msg.linear.x:.2f} m/s, w={msg.angular.z:.2f} rad/s \n '
+            f'Pose : v={self.vbateau[0]:.2f}m/s, w={self.wbateau:.2f} rad/s \n'
             f'Computed: Left={fl:.0f}, Right={fr:.0f}'
         )
 

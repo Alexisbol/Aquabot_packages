@@ -1,0 +1,30 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/mathijs/ros2_ws/install/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/update_map/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/tracking/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/simple_launch/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/py_pathfinding/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/custom_interface/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/camera_qrcode/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/camera_control/lib/python3.10/site-packages",
+        "/home/mathijs/vrx_ws/install/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/mathijs/ros2_ws/install/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/update_map/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/tracking/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/simple_launch/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/py_pathfinding/lib/python3.10/site-packages",
+        "/home/mathijs/ros2_ws/install/custom_interface/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/camera_qrcode/local/lib/python3.10/dist-packages",
+        "/home/mathijs/ros2_ws/install/camera_control/lib/python3.10/site-packages",
+        "/home/mathijs/vrx_ws/install/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}
