@@ -1,4 +1,5 @@
 from simple_launch import SimpleLauncher
+from simple_launch.events import When
 
 
 def generate_launch_description():
@@ -42,14 +43,15 @@ def generate_launch_description():
     sl.node('tf2_ros', 'static_transform_publisher', name='static_map_4', arguments=['--child-frame-id', 'base_link', '--frame-id', 'wamv/base_link'])
     sl.node('tf2_ros', 'static_transform_publisher', name='static_map_5', arguments=['--child-frame-id', 'aquabot/wamv/base_link', '--frame-id', 'wamv/base_link'])
 
-    #sl.node('update_map','add_turbines')
+    sl.node('update_map','add_turbines')
 
 
     #run nav2 stack
-    sl.include('nav2_bringup', 'bringup_launch.py',
-               launch_arguments={
-                                 'map':[sl.find('nautilus_launch', 'map_400.yaml')],
-                                 'params_file' : [sl.find('nautilus_launch','nav2_params.yaml')]})
+    with sl.group(when = When(delay = 10.)):
+        sl.include('nav2_bringup', 'bringup_launch.py',
+                launch_arguments={
+                                        'map':[sl.find('nautilus_launch', 'map_400.yaml')],
+                                        'params_file' : [sl.find('nautilus_launch','nav2_params.yaml')]})
 
     #sl.node('py_pathfinding', 'pathfinding')
 
