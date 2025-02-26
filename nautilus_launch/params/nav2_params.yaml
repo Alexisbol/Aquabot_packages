@@ -179,7 +179,7 @@ global_costmap:
     width: 500         # Largeur de la carte de coût (en nombre de cellules)
     height: 500        # Hauteur de la carte de coût (en nombre de cellules)
     resolution: 1.0   # Résolution de la carte de coût (en mètres par cellule)
-    robot_radius: 0.5 # Rayon du robot (en mètres)
+    robot_radius: 6.0 # Rayon du robot (en mètres)
 
 global_costmap:
   global_costmap:
@@ -189,7 +189,7 @@ global_costmap:
       global_frame: map 
       robot_base_frame: aquabot/wamv/base_link 
       use_sim_time: False
-      robot_radius: 0.22
+      robot_radius: 6.0
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "inflation_layer"]
