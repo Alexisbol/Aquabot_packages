@@ -66,7 +66,7 @@ class ControlNode(Node):
         # You might need to calibrate this value based on your system.
         self.K_linear = 100.0  # Gain for linear speed (m/s -> thruster units).
         # Using the same gain for the angular component.
-        self.K_angular = self.K_linear/2  # Gain for angular speed (rad/s -> thruster units).
+        self.K_angular = self.K_linear/1.5  # Gain for angular speed (rad/s -> thruster units).
         self.odom_received = False
 
     def odom_callback(self, msg):
