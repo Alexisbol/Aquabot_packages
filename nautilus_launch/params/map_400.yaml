@@ -1,4 +1,4 @@
-image: "map_updated_400.png"
+image: "map_400.png"
 resolution: 0.5
 origin: [-200, -200, 0]
 occupied_thresh: 0.65

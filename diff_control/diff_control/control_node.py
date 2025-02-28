@@ -69,6 +69,14 @@ class ControlNode(Node):
         self.K_angular = self.K_linear/2  # Gain for angular speed (rad/s -> thruster units).
         self.odom_received = False
 
+        # Declare ROS2 parameters for kv and kw
+        self.declare_parameter('kv', 300.0)
+        self.declare_parameter('kw', 300.0)
+
+        # Retrieve the parameter values
+        self.K_linear = self.get_parameter('kv').get_parameter_value().double_value
+        self.K_angular = self.get_parameter('kw').get_parameter_value().double_value
+
     def odom_callback(self, msg):
 
         if not self.odom_received : 
@@ -141,10 +149,11 @@ class ControlNode(Node):
 
             return (fx-self.fxd)**2 + (fy-self.fyd)**2 + (m-self.md)**2 + 0.1*tl**2 + 0.1*tr**2
         
-            
+        self.Kv = self.get_parameter('kv').get_parameter_value().double_value
+        self.Kw = self.get_parameter('kw').get_parameter_value().double_value
 
-        self.fxd = 300*(5*msg.linear.x -self.vbateau[0])    
-        self.md = 300*(msg.angular.z-3*self.wbateau)
+        self.fxd = self.Kv*(2.5*msg.linear.x -self.vbateau[0])    
+        self.md = self.Kw*(10*msg.angular.z-self.wbateau)
         self.fyd=0
 
         fl,fr,tl,tr = minimize(force, [0,0,0,0], method='SLSQP',
