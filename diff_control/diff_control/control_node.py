@@ -66,7 +66,7 @@ class ControlNode(Node):
         # You might need to calibrate this value based on your system.
         self.K_linear = 100.0  # Gain for linear speed (m/s -> thruster units).
         # Using the same gain for the angular component.
-        self.K_angular = self.K_linear/2  # Gain for angular speed (rad/s -> thruster units).
+        self.K_angular = self.K_linear/1.5  # Gain for angular speed (rad/s -> thruster units).
         self.odom_received = False
 
         # Declare ROS2 parameters for kv and kw
@@ -149,11 +149,10 @@ class ControlNode(Node):
 
             return (fx-self.fxd)**2 + (fy-self.fyd)**2 + (m-self.md)**2 + 0.1*tl**2 + 0.1*tr**2
         
-        self.Kv = self.get_parameter('kv').get_parameter_value().double_value
-        self.Kw = self.get_parameter('kw').get_parameter_value().double_value
+            
 
-        self.fxd = self.Kv*(2.5*msg.linear.x -self.vbateau[0])    
-        self.md = self.Kw*(10*msg.angular.z-self.wbateau)
+        self.fxd = 300*(3*msg.linear.x - self.vbateau[0])    
+        self.md = 300*(6*msg.angular.z - self.wbateau)
         self.fyd=0
 
         fl,fr,tl,tr = minimize(force, [0,0,0,0], method='SLSQP',
