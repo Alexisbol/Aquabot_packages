@@ -143,8 +143,8 @@ class ControlNode(Node):
         
             
 
-        self.fxd = 300*(5*msg.linear.x -self.vbateau[0])    
-        self.md = 300*(msg.angular.z-3*self.wbateau)
+        self.fxd = 300*(3*msg.linear.x - self.vbateau[0])    
+        self.md = 300*(6*msg.angular.z - self.wbateau)
         self.fyd=0
 
         fl,fr,tl,tr = minimize(force, [0,0,0,0], method='SLSQP',
