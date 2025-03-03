@@ -1,6 +1,6 @@
 image: "map_400.png"
-resolution: 0.5
-origin: [-200, -200, 0]
+resolution: 2
+origin: [-800, -800, 0]
 occupied_thresh: 0.65
 free_thresh: 0.196
 negate: 0
