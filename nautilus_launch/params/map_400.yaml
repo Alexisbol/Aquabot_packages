@@ -1,6 +1,6 @@
-image: "map_1200_bw.png"
+image: "map_updated_1200.png"
 resolution: 1 # in meter per pixel
-origin: [-593, -670, 4,71319] # [x, y, yaw] in meter and radian, 1200x1200 pixels origine at (593, 530) pixels
+origin: [-593, -670, 1.57] # [x, y, yaw] in meter and radian, 1200x1200 pixels origine at (593, 530) pixels
 occupied_thresh: 0.65
 free_thresh: 0.196
 negate: 0
