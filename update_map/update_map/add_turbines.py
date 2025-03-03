@@ -22,8 +22,8 @@ class Add_turbines(Node):
 
 
         # Construire les chemins relatifs
-        self.map_path = self.base_path.replace('lib/python3.10/site-packages/update_map','share/nautilus_launch/params/map_400.png')
-        self.updated_map_path = self.base_path.replace('lib/python3.10/site-packages/update_map', 'share/nautilus_launch/params/map_updated_400.png')
+        self.map_path = self.base_path.replace('lib/python3.10/site-packages/update_map','share/nautilus_launch/params/map_1200_bw.png')
+        self.updated_map_path = self.base_path.replace('lib/python3.10/site-packages/update_map', 'share/nautilus_launch/params/map_updated_1200.png')
         self.get_logger().info(f"nouveau path  : {self.updated_map_path}")
 
         #self.updated_map_path = "map_updated_400.png"
@@ -34,7 +34,7 @@ class Add_turbines(Node):
             turbines = []
             for pos in msg.poses:
                 p=pos.position
-                turbines.append((int(p.x+400),int(-p.y+400)))
+                turbines.append((int(p.x+593),int(-p.y+593)))
 
 
             img = cv2.imread(self.map_path) 
