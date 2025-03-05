@@ -38,6 +38,7 @@ class Add_turbines(Node):
 
 
             img = cv2.imread(self.map_path) 
+            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
             if img is None:
                 self.get_logger().error("Erreur : Impossible d'ouvrir l'image.")
 
@@ -47,7 +48,7 @@ class Add_turbines(Node):
                 cv2.circle(img,p,20,(150,150,150),-1)
                 cv2.circle(img,p,15,(75,75,75),-1)
                 cv2.circle(img,p,10,(0,0,0),-1)
-
+            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
             if cv2.imwrite(self.updated_map_path, img):
                 self.get_logger().info(f"Image mise à jour enregistrée dans : {self.updated_map_path}")
 
