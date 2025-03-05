@@ -34,7 +34,7 @@ class Add_turbines(Node):
             turbines = []
             for pos in msg.poses:
                 p=pos.position
-                turbines.append((int(p.x+593),int(-p.y+593)))
+                turbines.append((int(p.x+593),int(-p.y+530)))
 
 
             img = cv2.imread(self.map_path) 
