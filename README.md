@@ -63,7 +63,7 @@ ros2 launch aquabot_gz competition.launch.py world:=aquabot_regatta
 ```
 ```
 ros2 launch aquabot_gz competition.launch.py world:=aquabot_windturbines_easy headless:=true competition_mode:=true
-ros2 launch aquabot_gz competition.launch.py world:=aquabot_windturbines_easy headless:=false competition_mode:=true
+ros2 launch aquabot_gz competition.launch.py world:=aquabot_windturbines_competition_00 headless:=false competition_mode:=true
 
 ```
 

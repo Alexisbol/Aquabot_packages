@@ -22,8 +22,8 @@ class Add_turbines(Node):
 
 
         # Construire les chemins relatifs
-        self.map_path = self.base_path.replace('lib/python3.10/site-packages/update_map','share/nautilus_launch/params/map_1200_bw.png')
-        self.updated_map_path = self.base_path.replace('lib/python3.10/site-packages/update_map', 'share/nautilus_launch/params/map_updated_1200.png')
+        self.map_path = self.base_path.replace('lib/python3.10/site-packages/update_map','share/nautilus_launch/params/map_1000_bw.png')
+        self.updated_map_path = self.base_path.replace('lib/python3.10/site-packages/update_map', 'share/nautilus_launch/params/map_updated_1000.png')
         self.get_logger().info(f"nouveau path  : {self.updated_map_path}")
 
         #self.updated_map_path = "map_updated_400.png"
@@ -34,11 +34,11 @@ class Add_turbines(Node):
             turbines = []
             for pos in msg.poses:
                 p=pos.position
-                turbines.append((int(p.x+593),int(-p.y+530)))
+                turbines.append((int(p.x+500),int(-p.y+500)))
 
 
             img = cv2.imread(self.map_path) 
-            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            #img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
             if img is None:
                 self.get_logger().error("Erreur : Impossible d'ouvrir l'image.")
 
@@ -48,7 +48,7 @@ class Add_turbines(Node):
                 cv2.circle(img,p,20,(150,150,150),-1)
                 cv2.circle(img,p,15,(75,75,75),-1)
                 cv2.circle(img,p,10,(0,0,0),-1)
-            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            #img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
             if cv2.imwrite(self.updated_map_path, img):
                 self.get_logger().info(f"Image mise à jour enregistrée dans : {self.updated_map_path}")
 
